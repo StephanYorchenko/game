@@ -1,5 +1,5 @@
-import { createDemoWorld } from "./demo.js";
-import { createMapView } from "./map-view.js";
+import { createDemoWorld } from "./demo";
+import { createMapView } from "./map-view";
 import "./style.css";
 
 const root = document.getElementById("map");

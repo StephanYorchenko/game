@@ -1,10 +1,10 @@
-import { canReachInteraction, canReachMaskedCell } from "../geometry/index.js";
-import type { LineOptions } from "../geometry/index.js";
-import { getStepDestinations } from "../movement/index.js";
-import type { MovementOptions } from "../movement/index.js";
-import type { SeededRng } from "../random/index.js";
-import { getCell } from "../world/index.js";
-import type { Mask5x5, Position, UnitState, WorldState } from "../world/index.js";
+import { canReachInteraction, canReachMaskedCell } from "../geometry";
+import type { LineOptions } from "../geometry";
+import { getStepDestinations } from "../movement";
+import type { MovementOptions } from "../movement";
+import type { SeededRng } from "../random";
+import { getCell } from "../world";
+import type { Mask5x5, Position, UnitState, WorldState } from "../world";
 
 export type ActionTarget =
   | { readonly kind: "attack"; readonly position: Position }

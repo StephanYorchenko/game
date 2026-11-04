@@ -1,5 +1,5 @@
-import { getCell, getOccupant } from "../world/index.js";
-import type { Position, UnitState, WorldState } from "../world/index.js";
+import { getCell, getOccupant } from "../world";
+import type { Position, UnitState, WorldState } from "../world";
 
 const STEPS = [
   { direction: "north", x: 0, y: -1 },

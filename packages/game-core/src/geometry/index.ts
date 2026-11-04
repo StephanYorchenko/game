@@ -1,5 +1,5 @@
-import { getCell, getOccupant } from "../world/index.js";
-import type { Mask5x5, Position, Structure, UnitState, WorldState } from "../world/index.js";
+import { getCell, getOccupant } from "../world";
+import type { Mask5x5, Position, Structure, UnitState, WorldState } from "../world";
 
 export type LineBlocker =
   | { kind: "structure"; position: Position; structure: Structure }

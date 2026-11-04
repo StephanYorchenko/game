@@ -61,12 +61,13 @@
     "node": ">=24"
   },
   "scripts": {
-    "build": "tsc --project tsconfig.json",
+    "build": "tsc --project tsconfig.json && tsc-alias --project tsconfig.json",
     "typecheck": "tsc --project tsconfig.json --noEmit",
     "test": "node --test",
     "check": "pnpm run typecheck && pnpm run build && pnpm test"
   },
   "devDependencies": {
+    "tsc-alias": "1.9.10",
     "typescript": "7.0.2"
   }
 }

@@ -1,4 +1,4 @@
-import { getCell } from "./state.js";
+import { getCell } from "./state";
 import type {
   Cell,
   Durability,
@@ -10,7 +10,7 @@ import type {
   UnitState,
   UnitStats,
   WorldState,
-} from "./state.js";
+} from "./state";
 
 export class ScenarioValidationError extends Error {
   constructor(

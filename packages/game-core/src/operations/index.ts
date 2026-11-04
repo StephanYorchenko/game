@@ -1,12 +1,12 @@
-import { ExecutionQueue } from "../execution/index.js";
-import type { ExecutionHooks } from "../execution/index.js";
-import { addEffect, modifyEffectCounter, removeEffect, snapshotPhase } from "../effects/index.js";
-import type { EffectPhase, EffectStore, JsonObject, ScheduledEffect } from "../effects/index.js";
-import { heal, modifyHP, modifyStat } from "../stats/index.js";
-import type { Characteristic } from "../stats/index.js";
-import { createPhaseContext, resolveTargets } from "../targets/index.js";
-import type { PhaseContext, TargetSelector } from "../targets/index.js";
-import type { UnitStats, WorldState } from "../world/index.js";
+import { ExecutionQueue } from "../execution";
+import type { ExecutionHooks } from "../execution";
+import { addEffect, modifyEffectCounter, removeEffect, snapshotPhase } from "../effects";
+import type { EffectPhase, EffectStore, JsonObject, ScheduledEffect } from "../effects";
+import { heal, modifyHP, modifyStat } from "../stats";
+import type { Characteristic } from "../stats";
+import { createPhaseContext, resolveTargets } from "../targets";
+import type { PhaseContext, TargetSelector } from "../targets";
+import type { UnitStats, WorldState } from "../world";
 
 export type InstanceTarget = { kind: "self" } | { kind: "instance"; id: string };
 export type NumericExpression =

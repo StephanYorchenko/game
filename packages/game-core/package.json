@@ -17,6 +17,10 @@
       "types": "./dist/geometry.d.ts",
       "import": "./dist/geometry.js"
     },
+    "./turn": {
+      "types": "./dist/turn.d.ts",
+      "import": "./dist/turn.js"
+    },
     "./death": {
       "types": "./dist/death.d.ts",
       "import": "./dist/death.js"

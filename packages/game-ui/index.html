@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="ru">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#141a19" />
+    <title>DeathWarriors — карта</title>
+  </head>
+  <body>
+    <div class="shell">
+      <header class="masthead">
+        <div><p class="eyebrow">DEATHWARRIORS / ТАКТИЧЕСКАЯ КАРТА</p>
+          <h1>Держать периметр</h1></div>
+        <span class="badge">Просмотр сценария</span>
+      </header>
+      <main class="layout">
+        <section class="map-panel" aria-label="Состояние карты">
+          <div class="panel-heading"><div><p class="eyebrow">ЛОКАЦИЯ 01</p>
+            <h2>Дом у опушки</h2></div><span id="map-size" class="badge"></span></div>
+          <p id="summary" class="summary" role="status"></p>
+          <div id="map-viewport" class="map-viewport" tabindex="0"
+            role="region" aria-label="Карта с прокруткой">
+            <div id="map"></div>
+          </div>
+          <p class="map-note">Координаты начинаются с 0. Наведи на клетку, чтобы прочитать её состав.</p>
+        </section>
+        <aside class="legend-panel" aria-labelledby="legend-heading">
+          <p class="eyebrow">ОБОЗНАЧЕНИЯ</p><h2 id="legend-heading">Читать карту</h2>
+          <ul class="legend">
+            <li><span class="token defender">З</span><span>Защитник<small>Круг · HP под юнитом</small></span></li>
+            <li><span class="token enemy">В</span><span>Противник<small>Ромб · HP под юнитом</small></span></li>
+            <li><span class="legend-symbol trap">×</span><span>Ловушка</span></li>
+            <li><span class="legend-symbol wall">▦</span><span>Стена</span></li>
+            <li><span class="legend-symbol obstacle">◆</span><span>Препятствие</span></li>
+            <li><span class="legend-symbol opening">Д / О</span><span>Дверь / окно<small>З — закрыто · О — открыто<br />Р — разрушено · + — укрепление</small></span></li>
+            <li><span class="swatch floor"></span><span>Пол</span></li>
+            <li><span class="swatch ground"></span><span>Грунт</span></li>
+          </ul>
+          <p class="legend-note">Сплошная рамка клетки — внутри здания.<br />Пунктирная — снаружи.</p>
+          <div class="notice"><strong>Снимок состояния</strong>
+            <p>Демонстрационная карта. Управление ночью появится после подключения симуляции.</p>
+          </div>
+        </aside>
+      </main>
+      <footer>DEATHWARRIORS <span>Карта и сущности · MVP</span></footer>
+    </div>
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>

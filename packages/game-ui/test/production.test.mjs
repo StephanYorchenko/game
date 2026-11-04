@@ -1,0 +1,12 @@
+import { test, expect } from "@playwright/test";
+
+test("production-сборка загружает API core и отображает карту", async ({ page }) => {
+  const errors = [];
+  page.on("pageerror", (error) => errors.push(error.message));
+  await page.goto("/");
+  await expect(page.getByRole("table", { name: "Карта 14 × 10" })).toBeVisible();
+  await expect(page.locator("td[data-x]")).toHaveCount(140);
+  await expect(page.locator(".tile .token")).toHaveCount(5);
+  expect(errors).toEqual([]);
+  await page.screenshot({ path: test.info().outputPath("map-desktop.png"), fullPage: true });
+});

@@ -3,3 +3,5 @@ dist/
 coverage/
 *.tsbuildinfo
 npm-debug.log*
+test-results/
+playwright-report/

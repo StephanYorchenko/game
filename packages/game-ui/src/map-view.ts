@@ -1,5 +1,7 @@
 import { getCell, getOccupant } from "@deathwarriors/game-core";
 import type {
+  Cell,
+  Position,
   Structure,
   WorldState,
 } from "@deathwarriors/game-core";
@@ -48,10 +50,110 @@ export interface MapView {
   destroy(): void;
 }
 
+export interface CellSelection {
+  position: Position;
+  cell: Cell;
+  occupant: ReturnType<typeof getOccupant>;
+}
+
+export interface MapViewOptions {
+  onSelect?: (selection: CellSelection | null) => void;
+}
+
 /** Принимает корректный WorldState; загрузку неизвестных данных выполняет core. */
-export function createMapView(root: HTMLElement): MapView {
+export function createMapView(root: HTMLElement, options: MapViewOptions = {}): MapView {
+  let currentWorld: WorldState | null = null;
+  let selected: Position | null = null;
+  let focused: Position = { x: 0, y: 0 };
+  let buttons: HTMLButtonElement[] = [];
+
+  function samePosition(left: Position | null, right: Position): boolean {
+    return left?.x === right.x && left.y === right.y;
+  }
+
+  function buttonAt(position: Position): HTMLButtonElement | undefined {
+    return currentWorld ? buttons[position.y * currentWorld.map.width + position.x] : undefined;
+  }
+
+  function notifySelection(): void {
+    const cell = currentWorld && selected ? getCell(currentWorld.map, selected) : undefined;
+
+    if (!currentWorld || !selected || !cell) {
+      options.onSelect?.(null);
+      return;
+    }
+
+    options.onSelect?.({
+      position: { ...selected },
+      cell,
+      occupant: getOccupant(currentWorld, selected),
+    });
+  }
+
+  function select(position: Position): void {
+    if (selected) {
+      buttonAt(selected)?.setAttribute("aria-pressed", "false");
+    }
+
+    selected = { ...position };
+    buttonAt(selected)?.setAttribute("aria-pressed", "true");
+    notifySelection();
+  }
+
+  function focus(position: Position): void {
+    const button = buttonAt(position);
+
+    if (!button) {
+      return;
+    }
+
+    const previous = buttonAt(focused);
+
+    if (previous) {
+      previous.tabIndex = -1;
+    }
+
+    focused = { ...position };
+    button.tabIndex = 0;
+  }
+
+  function handleKey(event: KeyboardEvent, position: Position): void {
+    const directions: Record<string, Position> = {
+      ArrowLeft: { x: -1, y: 0 },
+      ArrowRight: { x: 1, y: 0 },
+      ArrowUp: { x: 0, y: -1 },
+      ArrowDown: { x: 0, y: 1 },
+    };
+    const direction = directions[event.key];
+
+    if (!direction || !currentWorld) {
+      return;
+    }
+
+    event.preventDefault();
+    const next = {
+      x: Math.max(0, Math.min(currentWorld.map.width - 1, position.x + direction.x)),
+      y: Math.max(0, Math.min(currentWorld.map.height - 1, position.y + direction.y)),
+    };
+    focus(next);
+    buttonAt(next)?.focus({ preventScroll: true });
+    buttonAt(next)?.scrollIntoView({ block: "nearest", inline: "nearest" });
+  }
+
   return {
     render(world) {
+      const restoreFocus = root.contains(document.activeElement);
+      currentWorld = world;
+      buttons = [];
+
+      if (selected && !getCell(world.map, selected)) {
+        selected = null;
+      }
+
+      if (!getCell(world.map, focused)) {
+        focused = { x: 0, y: 0 };
+      }
+
       const table = document.createElement("table");
       table.className = "map-grid";
       const caption = document.createElement("caption");
@@ -85,7 +187,15 @@ export function createMapView(root: HTMLElement): MapView {
           }
 
           const td = row.insertCell();
-          const tile = document.createElement("div");
+          const tile = document.createElement("button");
+          const position = { x, y };
+          tile.type = "button";
+          tile.tabIndex = samePosition(focused, position) ? 0 : -1;
+          tile.setAttribute("aria-pressed", String(samePosition(selected, position)));
+          tile.addEventListener("click", () => select(position));
+          tile.addEventListener("focus", () => focus(position));
+          tile.addEventListener("keydown", (event) => handleKey(event, position));
+          buttons.push(tile);
           tile.className = `tile ${cell.surface} ${cell.area}`;
           td.dataset.x = String(x);
           td.dataset.y = String(y);
@@ -118,15 +228,25 @@ export function createMapView(root: HTMLElement): MapView {
 
           td.setAttribute("aria-label", description.join("; "));
           tile.title = description.join("; ");
-          tile.setAttribute("aria-hidden", "true");
+          tile.setAttribute("aria-label", description.join("; "));
           td.append(tile);
         }
       }
 
       root.replaceChildren(table);
+      notifySelection();
+
+      if (restoreFocus) {
+        buttonAt(focused)?.focus({ preventScroll: true });
+      }
     },
     destroy() {
       root.replaceChildren();
+      currentWorld = null;
+      selected = null;
+      focused = { x: 0, y: 0 };
+      buttons = [];
+      notifySelection();
     },
   };
 }

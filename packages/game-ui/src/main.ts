@@ -1,17 +1,21 @@
 import { createDemoWorld } from "./demo.js";
 import { createMapView } from "./map-view.js";
+import { renderCellInspector } from "./cell-inspector.js";
 import "./style.css";
 
 const root = document.getElementById("map");
 const size = document.getElementById("map-size");
 const summary = document.getElementById("summary");
+const inspector = document.getElementById("cell-inspector");
 
-if (!root || !size || !summary) {
+if (!root || !size || !summary || !inspector) {
   throw new Error("Не найден контейнер карты");
 }
 
 const world = createDemoWorld();
-const view = createMapView(root);
+const view = createMapView(root, {
+  onSelect: (selection) => renderCellInspector(inspector, selection),
+});
 view.render(world);
 size.textContent = `${world.map.width} × ${world.map.height}`;
 const defenders = world.units.filter((unit) => unit.alive && unit.side === "defender").length;

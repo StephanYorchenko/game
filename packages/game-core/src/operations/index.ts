@@ -1,9 +1,10 @@
 import { ExecutionQueue } from "../execution";
-import type { ExecutionHooks } from "../execution";
+import type { EffectExecution, ExecutionHooks } from "../execution";
 import { addEffect, modifyEffectCounter, removeEffect, snapshotPhase } from "../effects";
 import type { EffectPhase, EffectStore, JsonObject, ScheduledEffect } from "../effects";
 import { heal, modifyHP, modifyStat } from "../stats";
 import type { Characteristic } from "../stats";
+import type { EntityTemplate, SummoningState } from "../summoning";
 import { createPhaseContext, resolveTargets } from "../targets";
 import type { PhaseContext, TargetSelector } from "../targets";
 import type { Position, UnitStats, WorldState } from "../world";
@@ -32,6 +33,7 @@ export type EngineOperation =
   | { kind: "modify_hp"; target: TargetSelector; delta: NumericExpression }
   | { kind: "heal"; target: TargetSelector; value: NumericExpression }
   | { kind: "create_damage_event"; target: { kind: "cell" }; amount: NumericExpression }
+  | { kind: "place_entity"; target: { kind: "cell" }; template: EntityTemplate }
   | { kind: "add_effect"; target: TargetSelector; effect: EffectTemplate }
   | { kind: "remove_effect"; instance: InstanceTarget }
   | { kind: "modify_counter"; instance: InstanceTarget; name: string; delta: NumericExpression };
@@ -43,10 +45,12 @@ export interface ExecutableEffect extends ScheduledEffect<EngineOperation> {
 export interface OperationRuntime {
   readonly world: WorldState;
   readonly effects: EffectStore<EngineOperation>;
+  readonly summoning?: SummoningState;
 }
 
 export interface OperationEvents {
   createDamageEvent(cell: Readonly<Position>, amount: number): void;
+  placeEntity?(cell: Readonly<Position>, template: EntityTemplate): boolean;
 }
 
 function instanceId(reference: InstanceTarget, effect: ExecutableEffect): string {
@@ -136,6 +140,20 @@ export function executeOperation(
   operation: EngineOperation,
   events?: OperationEvents,
 ): boolean {
+  if (operation.kind === "place_entity") {
+    const target = resolveTargets(runtime.world, effect.context, operation.target);
+
+    if (target.kind !== "cell") {
+      return false;
+    }
+
+    if (!events?.placeEntity) {
+      throw new Error("Для размещения нужна очередь с поддержкой призыва");
+    }
+
+    return events.placeEntity(target.position, operation.template);
+  }
+
   if (operation.kind === "create_damage_event") {
     const target = resolveTargets(runtime.world, effect.context, operation.target);
     const amount = evaluateNumeric(runtime, effect, operation.amount);
@@ -253,12 +271,13 @@ export function createOperationQueue(
     ExecutionHooks<EngineOperation, ExecutableEffect>,
     "isOwnerAlive" | "afterEffect"
   >,
+  events?: (context: EffectExecution<EngineOperation, ExecutableEffect>) => OperationEvents,
 ): ExecutionQueue<EngineOperation, ExecutableEffect> {
   return new ExecutionQueue<EngineOperation, ExecutableEffect>({
     ...boundaries,
     canExecute: () => true,
     execute: (operation, context) => {
-      executeOperation(runtime, context.effect, operation);
+      executeOperation(runtime, context.effect, operation, events?.(context));
     },
   });
 }

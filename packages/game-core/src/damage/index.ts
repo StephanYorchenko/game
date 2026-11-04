@@ -2,6 +2,7 @@ import { commitUnitDeaths, isOwnerAlive } from "../death";
 import { EntryQueue } from "../execution";
 import { executeOperation, schedulePhase } from "../operations";
 import type { ExecutableEffect, OperationRuntime } from "../operations";
+import { createPlacementHandler } from "../summoning";
 import { getCell, getOccupant } from "../world";
 import type { Position } from "../world";
 
@@ -157,6 +158,9 @@ export function createDamageQueue(
       for (const operation of entry.operations) {
         executeOperation(runtime, entry, operation, {
           createDamageEvent: (cell, amount) => context.emit(createCellDamage(state, cell, amount)),
+          placeEntity: createPlacementHandler(runtime, getTurnOrder, (...effects) =>
+            context.emit(...effects),
+          ),
         });
       }
 

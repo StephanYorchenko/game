@@ -1,5 +1,6 @@
 import { createOperationQueue, schedulePhase } from "../operations";
 import type { ExecutableEffect, OperationRuntime } from "../operations";
+import { createPlacementHandler } from "../summoning";
 import { getCell } from "../world";
 import type { Position, WorldState } from "../world";
 
@@ -101,10 +102,21 @@ export function commitUnitDeaths(runtime: OperationRuntime, turnOrder: string[])
 
 /** Getter читает актуальную очередь, включая перестановки и вставки призыва. */
 export function createDeathQueue(runtime: OperationRuntime, getTurnOrder: () => string[]) {
-  return createOperationQueue(runtime, {
-    isOwnerAlive: (ownerId) => isOwnerAlive(runtime.world, ownerId),
-    afterEffect: (context) => {
-      context.emit(...commitUnitDeaths(runtime, getTurnOrder()).effects);
+  return createOperationQueue(
+    runtime,
+    {
+      isOwnerAlive: (ownerId) => isOwnerAlive(runtime.world, ownerId),
+      afterEffect: (context) => {
+        context.emit(...commitUnitDeaths(runtime, getTurnOrder()).effects);
+      },
     },
-  });
+    (context) => ({
+      createDamageEvent: () => {
+        throw new Error("Для CELL_DAMAGE нужна очередь независимых событий");
+      },
+      placeEntity: createPlacementHandler(runtime, getTurnOrder, (...effects) =>
+        context.emit(...effects),
+      ),
+    }),
+  );
 }

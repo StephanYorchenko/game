@@ -24,6 +24,10 @@
     "./execution": {
       "types": "./dist/execution-queue.d.ts",
       "import": "./dist/execution-queue.js"
+    },
+    "./effects": {
+      "types": "./dist/effects.d.ts",
+      "import": "./dist/effects.js"
     }
   },
   "files": [

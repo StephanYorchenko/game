@@ -9,6 +9,10 @@
       "types": "./dist/index.d.ts",
       "import": "./dist/index.js"
     },
+    "./pathfinding": {
+      "types": "./dist/pathfinding.d.ts",
+      "import": "./dist/pathfinding.js"
+    },
     "./geometry": {
       "types": "./dist/geometry.d.ts",
       "import": "./dist/geometry.js"

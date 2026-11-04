@@ -17,6 +17,10 @@
       "types": "./dist/geometry.d.ts",
       "import": "./dist/geometry.js"
     },
+    "./operations": {
+      "types": "./dist/operations.d.ts",
+      "import": "./dist/operations.js"
+    },
     "./targets": {
       "types": "./dist/targets.d.ts",
       "import": "./dist/targets.js"

@@ -1,5 +1,5 @@
-import type { SeededRng } from "./random.js";
-import type { UnitState } from "./state.js";
+import type { SeededRng } from "../random/index.js";
+import type { UnitState } from "../world/index.js";
 
 export interface InitiativeEntry {
   readonly unitId: string;

@@ -1,8 +1,8 @@
-import { createDeathQueue } from "./death.js";
-import { schedulePhase } from "./operations.js";
-import type { ExecutableEffect, OperationRuntime } from "./operations.js";
-import type { PhaseContext } from "./targets.js";
-import type { UnitState } from "./state.js";
+import { createDeathQueue } from "../death/index.js";
+import { schedulePhase } from "../operations/index.js";
+import type { ExecutableEffect, OperationRuntime } from "../operations/index.js";
+import type { PhaseContext } from "../targets/index.js";
+import type { UnitState } from "../world/index.js";
 
 export type ActionKind = "ATTACK" | "INTERACT" | "MOVE";
 export interface TurnAction {

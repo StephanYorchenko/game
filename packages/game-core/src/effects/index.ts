@@ -1,4 +1,4 @@
-import type { QueuedEffect } from "./execution-queue.js";
+import type { QueuedEffect } from "../execution/index.js";
 
 export const EFFECT_PHASES = [
   "TURN_START",

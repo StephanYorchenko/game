@@ -1,7 +1,7 @@
-import { createOperationQueue, schedulePhase } from "./operations.js";
-import type { ExecutableEffect, OperationRuntime } from "./operations.js";
-import { getCell } from "./state.js";
-import type { Position, WorldState } from "./state.js";
+import { createOperationQueue, schedulePhase } from "../operations/index.js";
+import type { ExecutableEffect, OperationRuntime } from "../operations/index.js";
+import { getCell } from "../world/index.js";
+import type { Position, WorldState } from "../world/index.js";
 
 export interface CommittedDeath {
   readonly unitId: string;

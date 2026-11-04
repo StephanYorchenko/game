@@ -10,48 +10,48 @@
       "import": "./dist/index.js"
     },
     "./pathfinding": {
-      "types": "./dist/pathfinding.d.ts",
-      "import": "./dist/pathfinding.js"
+      "types": "./dist/pathfinding/index.d.ts",
+      "import": "./dist/pathfinding/index.js"
     },
     "./geometry": {
-      "types": "./dist/geometry.d.ts",
-      "import": "./dist/geometry.js"
+      "types": "./dist/geometry/index.d.ts",
+      "import": "./dist/geometry/index.js"
     },
     "./turn": {
-      "types": "./dist/turn.d.ts",
-      "import": "./dist/turn.js"
+      "types": "./dist/turn/index.d.ts",
+      "import": "./dist/turn/index.js"
     },
     "./death": {
-      "types": "./dist/death.d.ts",
-      "import": "./dist/death.js"
+      "types": "./dist/death/index.d.ts",
+      "import": "./dist/death/index.js"
     },
     "./operations": {
-      "types": "./dist/operations.d.ts",
-      "import": "./dist/operations.js"
+      "types": "./dist/operations/index.d.ts",
+      "import": "./dist/operations/index.js"
     },
     "./targets": {
-      "types": "./dist/targets.d.ts",
-      "import": "./dist/targets.js"
+      "types": "./dist/targets/index.d.ts",
+      "import": "./dist/targets/index.js"
     },
     "./stats": {
-      "types": "./dist/stats.d.ts",
-      "import": "./dist/stats.js"
+      "types": "./dist/stats/index.d.ts",
+      "import": "./dist/stats/index.js"
     },
     "./random": {
-      "types": "./dist/random.d.ts",
-      "import": "./dist/random.js"
+      "types": "./dist/random/index.d.ts",
+      "import": "./dist/random/index.js"
     },
     "./initiative": {
-      "types": "./dist/initiative.d.ts",
-      "import": "./dist/initiative.js"
+      "types": "./dist/initiative/index.d.ts",
+      "import": "./dist/initiative/index.js"
     },
     "./execution": {
-      "types": "./dist/execution-queue.d.ts",
-      "import": "./dist/execution-queue.js"
+      "types": "./dist/execution/index.d.ts",
+      "import": "./dist/execution/index.js"
     },
     "./effects": {
-      "types": "./dist/effects.d.ts",
-      "import": "./dist/effects.js"
+      "types": "./dist/effects/index.d.ts",
+      "import": "./dist/effects/index.js"
     }
   },
   "files": [

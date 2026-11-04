@@ -1,4 +1,4 @@
-import type { UnitState, UnitStats } from "./state.js";
+import type { UnitState, UnitStats } from "../world/index.js";
 
 const CHARACTERISTICS = [
   "maxHP",

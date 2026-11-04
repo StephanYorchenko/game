@@ -1,5 +1,5 @@
-import { getCell } from "./state.js";
-import type { Position, Structure, TrapState, UnitState, WorldState } from "./state.js";
+import { getCell } from "../world/index.js";
+import type { Position, Structure, TrapState, UnitState, WorldState } from "../world/index.js";
 
 export type PhaseContext =
   | { readonly kind: "phase"; readonly ownerId: string }

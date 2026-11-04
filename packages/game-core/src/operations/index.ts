@@ -6,7 +6,7 @@ import { heal, modifyHP, modifyStat } from "../stats";
 import type { Characteristic } from "../stats";
 import { createPhaseContext, resolveTargets } from "../targets";
 import type { PhaseContext, TargetSelector } from "../targets";
-import type { UnitStats, WorldState } from "../world";
+import type { Position, UnitStats, WorldState } from "../world";
 
 export type InstanceTarget = { kind: "self" } | { kind: "instance"; id: string };
 export type NumericExpression =
@@ -31,6 +31,7 @@ export type EngineOperation =
   | { kind: "modify_stat"; target: TargetSelector; stat: Characteristic; delta: NumericExpression }
   | { kind: "modify_hp"; target: TargetSelector; delta: NumericExpression }
   | { kind: "heal"; target: TargetSelector; value: NumericExpression }
+  | { kind: "create_damage_event"; target: { kind: "cell" }; amount: NumericExpression }
   | { kind: "add_effect"; target: TargetSelector; effect: EffectTemplate }
   | { kind: "remove_effect"; instance: InstanceTarget }
   | { kind: "modify_counter"; instance: InstanceTarget; name: string; delta: NumericExpression };
@@ -42,6 +43,10 @@ export interface ExecutableEffect extends ScheduledEffect<EngineOperation> {
 export interface OperationRuntime {
   readonly world: WorldState;
   readonly effects: EffectStore<EngineOperation>;
+}
+
+export interface OperationEvents {
+  createDamageEvent(cell: Readonly<Position>, amount: number): void;
 }
 
 function instanceId(reference: InstanceTarget, effect: ExecutableEffect): string {
@@ -129,7 +134,24 @@ export function executeOperation(
   runtime: OperationRuntime,
   effect: ExecutableEffect,
   operation: EngineOperation,
+  events?: OperationEvents,
 ): boolean {
+  if (operation.kind === "create_damage_event") {
+    const target = resolveTargets(runtime.world, effect.context, operation.target);
+    const amount = evaluateNumeric(runtime, effect, operation.amount);
+
+    if (target.kind !== "cell" || amount === undefined) {
+      return false;
+    }
+
+    if (!events) {
+      throw new Error("Для CELL_DAMAGE нужна очередь независимых событий");
+    }
+
+    events.createDamageEvent(target.position, amount);
+    return true;
+  }
+
   if (operation.kind === "remove_effect") {
     return removeEffect(runtime.effects, instanceId(operation.instance, effect));
   }

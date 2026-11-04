@@ -21,6 +21,10 @@
       "types": "./dist/turn/index.d.ts",
       "import": "./dist/turn/index.js"
     },
+    "./damage": {
+      "types": "./dist/damage/index.d.ts",
+      "import": "./dist/damage/index.js"
+    },
     "./death": {
       "types": "./dist/death/index.d.ts",
       "import": "./dist/death/index.js"

@@ -200,6 +200,15 @@ export function createPhaserMap(
     scene: [scene],
   });
 
+  // React-панели и прокрутка меняют положение canvas без resize самого canvas.
+  // Обновляем границы в capture-фазе, до преобразования координат ввода Phaser.
+  function refreshInputBounds(): void {
+    game.scale.updateBounds();
+  }
+
+  root.addEventListener("mousedown", refreshInputBounds, true);
+  root.addEventListener("touchstart", refreshInputBounds, { capture: true, passive: true });
+
   return {
     render(next) {
       world = next;
@@ -217,6 +226,8 @@ export function createPhaserMap(
       }
 
       disposed = true;
+      root.removeEventListener("mousedown", refreshInputBounds, true);
+      root.removeEventListener("touchstart", refreshInputBounds, true);
       game.destroy(true);
       root.replaceChildren();
     },

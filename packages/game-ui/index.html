@@ -16,8 +16,11 @@
       <main class="layout">
         <section class="map-panel" aria-label="Состояние карты">
           <div class="panel-heading"><div><p class="eyebrow">ЛОКАЦИЯ 01</p>
-            <h2>Дом у опушки</h2></div><span id="map-size" class="badge"></span></div>
+            <h2 id="scenario-name">Дом у опушки</h2></div>
+            <span id="map-size" class="badge"></span>
+          </div>
           <p id="summary" class="summary" role="status"></p>
+          <div id="scenario-controls"></div>
           <div id="map-viewport" class="map-viewport" tabindex="0"
             role="region" aria-label="Карта с прокруткой">
             <div id="map"></div>
@@ -44,7 +47,7 @@
           </ul>
           <p class="legend-note">Сплошная рамка клетки — внутри здания.<br />Пунктирная — снаружи.</p>
           <div class="notice"><strong>Снимок состояния</strong>
-            <p>Демонстрационная карта. Управление ночью появится после подключения симуляции.</p>
+            <p>JSON читается локально и проверяется ядром. Управление ночью появится позже.</p>
           </div>
         </aside>
         </div>

@@ -21,6 +21,10 @@
       "types": "./dist/random.d.ts",
       "import": "./dist/random.js"
     },
+    "./initiative": {
+      "types": "./dist/initiative.d.ts",
+      "import": "./dist/initiative.js"
+    },
     "./execution": {
       "types": "./dist/execution-queue.d.ts",
       "import": "./dist/execution-queue.js"

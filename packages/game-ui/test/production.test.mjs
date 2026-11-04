@@ -4,6 +4,8 @@ test("production-сборка загружает API core и отображае�
   const errors = [];
   page.on("pageerror", (error) => errors.push(error.message));
   await page.goto("/");
+  await expect(page.locator(".phaser-map")).toHaveAttribute("data-ready", "true");
+  await expect(page.locator("#map canvas")).toBeVisible();
   await expect(page.getByRole("table", { name: "Карта 14 × 10" })).toBeVisible();
   await expect(page.locator("td[data-x]")).toHaveCount(140);
   await expect(page.locator(".tile .token")).toHaveCount(5);

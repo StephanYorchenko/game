@@ -8,11 +8,18 @@ function inspector(page) {
   return page.locator("#cell-inspector");
 }
 
+async function clickCell(page, x, y) {
+  await expect(page.locator(".phaser-map")).toHaveAttribute("data-ready", "true");
+  await page.locator("#map canvas").click({
+    position: { x: 24 + x * 51 + 24, y: 24 + y * 51 + 24 },
+  });
+}
+
 async function mountFixture(page) {
   await page.evaluate(async () => {
     const { createDemoWorld } = await import("/src/demo.ts");
     const { createMapView } = await import("/src/map-view.ts");
-    const { renderCellInspector } = await import("/src/cell-inspector.ts");
+    const { renderCellInspector } = await import("/src/cell-inspector.tsx");
     const world = createDemoWorld();
     const view = createMapView(document.getElementById("map"), {
       onSelect: (selection) => renderCellInspector(
@@ -27,7 +34,7 @@ async function mountFixture(page) {
 
 test("клик показывает поверхность, структуру, укрепление, юнита и ловушку", async ({ page }) => {
   await page.goto("/");
-  await button(page, 5, 4).click();
+  await clickCell(page, 5, 4);
   await expect(inspector(page)).toContainText("Клетка (5, 4)");
   await expect(inspector(page)).toContainText("Внутри здания");
   await expect(inspector(page)).toContainText("defender-1");
@@ -40,17 +47,17 @@ test("клик показывает поверхность, структуру, 
 
   await expect(button(page, 5, 4)).toHaveAttribute("aria-pressed", "true");
   await page.screenshot({ path: test.info().outputPath("inspector.png"), fullPage: true });
-  await button(page, 6, 7).click();
+  await clickCell(page, 6, 7);
   await expect(inspector(page)).toContainText("Дверь");
   await expect(inspector(page)).toContainText("Закрыто");
   await expect(inspector(page)).toContainText("Укрепление");
   await expect(inspector(page)).toContainText("6 / 8");
   await expect(inspector(page)).toContainText("Клетка свободна");
   await expect(button(page, 5, 4)).toHaveAttribute("aria-pressed", "false");
-  await button(page, 6, 6).click();
+  await clickCell(page, 6, 6);
   await expect(inspector(page)).toContainText("Ловушка");
   await expect(inspector(page)).toContainText("demo-trap");
-  await button(page, 0, 0).click();
+  await clickCell(page, 0, 0);
   await expect(inspector(page)).toContainText("Грунт");
   await expect(inspector(page)).toContainText("Снаружи здания");
 });
@@ -90,7 +97,7 @@ test("инспектор читает оба слоя проёма, новый H
     world.units[0].definitionId = "<img src=x onerror=alert(1)>";
     view.render(world);
   });
-  await button(page, 3, 4).click();
+  await clickCell(page, 3, 4);
   await expect(inspector(page)).toContainText("Дверь");
   await expect(inspector(page)).toContainText("Открыто");
   await expect(inspector(page)).toContainText("defender-1");
@@ -119,7 +126,7 @@ test("инспектор читает оба слоя проёма, новый H
 test("уменьшение карты сбрасывает исчезнувший выбор; destroy очищает инспектор", async ({ page }) => {
   await page.goto("/");
   await mountFixture(page);
-  await button(page, 8, 5).click();
+  await clickCell(page, 8, 5);
   await page.evaluate(() => {
     const { world, view } = window.testMap;
     view.render({
@@ -148,7 +155,7 @@ test("на телефоне длинный ID инспектора перено�
     world.units[0].definitionId = "very-long-content-definition-id-".repeat(8);
     view.render(world);
   });
-  await button(page, 5, 4).click();
+  await clickCell(page, 5, 4);
   await expect(inspector(page)).toContainText("defender-1");
   const overflow = await page.evaluate(
     () => document.documentElement.scrollWidth > window.innerWidth,

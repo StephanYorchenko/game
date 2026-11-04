@@ -1,6 +1,6 @@
-import { createDemoWorld } from "./demo.js";
-import { createMapView } from "./map-view.js";
-import { renderCellInspector } from "./cell-inspector.js";
+import { createDemoWorld } from "./demo";
+import { createMapView } from "./map-view";
+import { destroyCellInspector, renderCellInspector } from "./cell-inspector";
 import "./style.css";
 
 const root = document.getElementById("map");
@@ -25,3 +25,8 @@ summary.textContent = [
   `Противники: ${enemies}`,
   `Ловушки: ${world.traps.length}`,
 ].join(" · ");
+
+import.meta.hot?.dispose(() => {
+  view.destroy();
+  destroyCellInspector(inspector);
+});

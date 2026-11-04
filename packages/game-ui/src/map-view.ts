@@ -1,4 +1,5 @@
 import { getCell, getOccupant } from "@deathwarriors/game-core";
+import { createPhaserMap } from "./phaser-map";
 import type {
   Cell,
   Position,
@@ -14,6 +15,7 @@ const structureNames = {
 };
 const openingNames = { open: "открыто", closed: "закрыто", destroyed: "разрушено" };
 const openingMarks = { open: "О", closed: "З", destroyed: "Р" };
+const views = new WeakMap<HTMLElement, MapView>();
 
 function label(className: string, text: string): HTMLSpanElement {
   const element = document.createElement("span");
@@ -62,6 +64,18 @@ export interface MapViewOptions {
 
 /** Принимает корректный WorldState; загрузку неизвестных данных выполняет core. */
 export function createMapView(root: HTMLElement, options: MapViewOptions = {}): MapView {
+  views.get(root)?.destroy();
+  const stage = document.createElement("div");
+  stage.className = "map-stage";
+  const canvasRoot = document.createElement("div");
+  canvasRoot.className = "phaser-map";
+  canvasRoot.setAttribute("aria-hidden", "true");
+  stage.append(canvasRoot);
+  root.replaceChildren(stage);
+  const renderer = createPhaserMap(canvasRoot, (position) => {
+    buttonAt(position)?.focus({ preventScroll: true });
+    select(position);
+  });
   let currentWorld: WorldState | null = null;
   let selected: Position | null = null;
   let focused: Position = { x: 0, y: 0 };
@@ -97,6 +111,7 @@ export function createMapView(root: HTMLElement, options: MapViewOptions = {}): 
 
     selected = { ...position };
     buttonAt(selected)?.setAttribute("aria-pressed", "true");
+    renderer.highlight(selected, focused);
     notifySelection();
   }
 
@@ -115,6 +130,7 @@ export function createMapView(root: HTMLElement, options: MapViewOptions = {}): 
 
     focused = { ...position };
     button.tabIndex = 0;
+    renderer.highlight(selected, focused);
   }
 
   function handleKey(event: KeyboardEvent, position: Position): void {
@@ -140,7 +156,7 @@ export function createMapView(root: HTMLElement, options: MapViewOptions = {}): 
     buttonAt(next)?.scrollIntoView({ block: "nearest", inline: "nearest" });
   }
 
-  return {
+  const view: MapView = {
     render(world) {
       const restoreFocus = root.contains(document.activeElement);
       currentWorld = world;
@@ -194,6 +210,11 @@ export function createMapView(root: HTMLElement, options: MapViewOptions = {}): 
           tile.setAttribute("aria-pressed", String(samePosition(selected, position)));
           tile.addEventListener("click", () => select(position));
           tile.addEventListener("focus", () => focus(position));
+          tile.addEventListener("blur", (event) => {
+            if (!(event.relatedTarget instanceof Node) || !root.contains(event.relatedTarget)) {
+              renderer.highlight(selected, null);
+            }
+          });
           tile.addEventListener("keydown", (event) => handleKey(event, position));
           buttons.push(tile);
           tile.className = `tile ${cell.surface} ${cell.area}`;
@@ -233,7 +254,10 @@ export function createMapView(root: HTMLElement, options: MapViewOptions = {}): 
         }
       }
 
-      root.replaceChildren(table);
+      stage.querySelector("table")?.remove();
+      stage.append(table);
+      renderer.render(world);
+      renderer.highlight(selected, restoreFocus ? focused : null);
       notifySelection();
 
       if (restoreFocus) {
@@ -241,12 +265,16 @@ export function createMapView(root: HTMLElement, options: MapViewOptions = {}): 
       }
     },
     destroy() {
+      renderer.destroy();
       root.replaceChildren();
       currentWorld = null;
       selected = null;
       focused = { x: 0, y: 0 };
       buttons = [];
       notifySelection();
+      views.delete(root);
     },
   };
+  views.set(root, view);
+  return view;
 }

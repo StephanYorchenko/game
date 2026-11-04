@@ -150,8 +150,23 @@ p {
 }
 
 .map-grid {
+  position: absolute;
+  top: 0;
+  left: 0;
+  opacity: 0;
+  pointer-events: none;
   border-spacing: 3px;
   margin: auto;
+}
+
+.map-stage {
+  position: relative;
+  width: max-content;
+  margin: auto;
+}
+
+.phaser-map canvas {
+  display: block;
 }
 
 .map-grid td {

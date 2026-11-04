@@ -1,4 +1,7 @@
-import type { CellSelection } from "./map-view.js";
+import { Fragment } from "react";
+import { createRoot } from "react-dom/client";
+import type { Root } from "react-dom/client";
+import type { CellSelection } from "./map-view";
 
 const structureNames = {
   wall: "Стена",
@@ -13,33 +16,22 @@ const openingNames = {
 };
 
 type Field = readonly [name: string, value: string | number];
+interface InspectorSection {
+  name: string;
+  fields: readonly Field[];
+}
 
-/** Поля сценария всегда выводятся как текст, без интерпретации HTML или контента. */
-export function renderCellInspector(root: HTMLElement, selection: CellSelection | null): void {
-  const content = document.createDocumentFragment();
+const roots = new WeakMap<HTMLElement, Root>();
 
-  function section(name: string, fields: readonly Field[]): void {
-    const heading = document.createElement("h3");
-    heading.textContent = name;
-    const list = document.createElement("dl");
-
-    for (const [name, value] of fields) {
-      const term = document.createElement("dt");
-      const description = document.createElement("dd");
-      term.textContent = name;
-      description.textContent = String(value);
-      list.append(term, description);
-    }
-
-    content.append(heading, list);
+function CellInspector({ selection }: { selection: CellSelection | null }) {
+  if (!selection) {
+    return <p>Выберите клетку на карте. Стрелки перемещают фокус, Enter или пробел выбирают.</p>;
   }
 
-  if (!selection) {
-    const hint = document.createElement("p");
-    hint.textContent = "Выберите клетку на карте. " +
-      "Стрелки перемещают фокус, Enter или пробел выбирают.";
-    root.replaceChildren(hint);
-    return;
+  const sections: InspectorSection[] = [];
+
+  function section(name: string, fields: readonly Field[]): void {
+    sections.push({ name, fields });
   }
 
   const { position, cell, occupant } = selection;
@@ -96,5 +88,34 @@ export function renderCellInspector(root: HTMLElement, selection: CellSelection 
     section("Сущности", [["Состояние", "Клетка свободна"]]);
   }
 
-  root.replaceChildren(content);
+  return sections.map(({ name, fields }) => (
+    <section key={name}>
+      <h3>{name}</h3>
+      <dl>
+        {fields.map(([name, value]) => (
+          <Fragment key={name}>
+            <dt>{name}</dt>
+            <dd>{value}</dd>
+          </Fragment>
+        ))}
+      </dl>
+    </section>
+  ));
+}
+
+/** React экранирует значения сценария; один root переиспользуется между снимками. */
+export function renderCellInspector(root: HTMLElement, selection: CellSelection | null): void {
+  let reactRoot = roots.get(root);
+
+  if (!reactRoot) {
+    reactRoot = createRoot(root);
+    roots.set(root, reactRoot);
+  }
+
+  reactRoot.render(<CellInspector selection={selection} />);
+}
+
+export function destroyCellInspector(root: HTMLElement): void {
+  roots.get(root)?.unmount();
+  roots.delete(root);
 }

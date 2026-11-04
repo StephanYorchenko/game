@@ -5,34 +5,43 @@ export interface QueuedEffect<Operation> {
   readonly operations: readonly Operation[];
 }
 
-export interface EffectExecution<Operation> {
-  readonly effect: QueuedEffect<Operation>;
+export interface EffectExecution<
+  Operation,
+  Effect extends QueuedEffect<Operation> = QueuedEffect<Operation>,
+> {
+  readonly effect: Effect;
   /** Последствия ждут завершения всех операций текущего эффекта. */
-  emit(...effects: readonly QueuedEffect<Operation>[]): void;
+  emit(...effects: readonly Effect[]): void;
 }
 
-export interface ExecutionHooks<Operation> {
+export interface ExecutionHooks<
+  Operation,
+  Effect extends QueuedEffect<Operation> = QueuedEffect<Operation>,
+> {
   isOwnerAlive(ownerId: string): boolean;
-  canExecute(operation: Operation, context: EffectExecution<Operation>): boolean;
-  execute(operation: Operation, context: EffectExecution<Operation>): void;
+  canExecute(operation: Operation, context: EffectExecution<Operation, Effect>): boolean;
+  execute(operation: Operation, context: EffectExecution<Operation, Effect>): void;
   /** Точка интеграции проверки смерти: после операций, до следующего элемента. */
-  afterEffect?(context: EffectExecution<Operation>): void;
+  afterEffect?(context: EffectExecution<Operation, Effect>): void;
 }
 
 /** Синхронная очередь: атомарность для планировщика, без отката операций. */
-export class ExecutionQueue<Operation> {
-  private pending: QueuedEffect<Operation>[] = [];
+export class ExecutionQueue<
+  Operation,
+  Effect extends QueuedEffect<Operation> = QueuedEffect<Operation>,
+> {
+  private pending: Effect[] = [];
   private running = false;
   private failed = false;
 
-  constructor(private readonly hooks: ExecutionHooks<Operation>) {}
+  constructor(private readonly hooks: ExecutionHooks<Operation, Effect>) {}
 
   get size(): number {
     return this.pending.length;
   }
 
   /** Первоначальная очередь. Внутри эффекта используется только context.emit. */
-  enqueue(...effects: readonly QueuedEffect<Operation>[]): void {
+  enqueue(...effects: readonly Effect[]): void {
     if (this.running || this.failed) {
       throw new Error("Нельзя дополнять очередь во время исполнения или после ошибки");
     }
@@ -55,9 +64,9 @@ export class ExecutionQueue<Operation> {
           continue;
         }
 
-        const consequences: QueuedEffect<Operation>[] = [];
+        const consequences: Effect[] = [];
         let active = true;
-        const context: EffectExecution<Operation> = {
+        const context: EffectExecution<Operation, Effect> = {
           effect,
           emit: (...effects) => {
             if (!active) {
@@ -90,7 +99,7 @@ export class ExecutionQueue<Operation> {
     }
   }
 
-  private copy(effect: QueuedEffect<Operation>): QueuedEffect<Operation> {
+  private copy(effect: Effect): Effect {
     return { ...effect, operations: [...effect.operations] };
   }
 }

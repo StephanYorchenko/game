@@ -16,11 +16,16 @@
     "check": "pnpm run typecheck && pnpm run build && pnpm test"
   },
   "dependencies": {
-    "@deathwarriors/game-core": "workspace:*"
+    "@deathwarriors/game-core": "workspace:*",
+    "phaser": "4.2.1",
+    "react": "19.3.1",
+    "react-dom": "19.3.1"
   },
   "devDependencies": {
+    "@playwright/test": "1.64.1",
+    "@types/react": "19.3.0",
+    "@types/react-dom": "19.3.0",
     "typescript": "7.0.2",
-    "vite": "8.3.5",
-    "@playwright/test": "1.64.1"
+    "vite": "8.3.5"
   }
 }

@@ -22,8 +22,14 @@
             role="region" aria-label="Карта с прокруткой">
             <div id="map"></div>
           </div>
-          <p class="map-note">Координаты начинаются с 0. Наведи на клетку, чтобы прочитать её состав.</p>
+          <p class="map-note">Клик — выбор. Стрелки — фокус. Enter или пробел — выбрать клетку.</p>
         </section>
+        <div class="sidebar">
+          <section class="inspector-panel" aria-labelledby="inspector-heading">
+            <p class="eyebrow">ВЫБРАННАЯ КЛЕТКА</p>
+            <h2 id="inspector-heading">Инспектор</h2>
+            <div id="cell-inspector" aria-live="polite" aria-atomic="true"></div>
+          </section>
         <aside class="legend-panel" aria-labelledby="legend-heading">
           <p class="eyebrow">ОБОЗНАЧЕНИЯ</p><h2 id="legend-heading">Читать карту</h2>
           <ul class="legend">
@@ -41,6 +47,7 @@
             <p>Демонстрационная карта. Управление ночью появится после подключения симуляции.</p>
           </div>
         </aside>
+        </div>
       </main>
       <footer>DEATHWARRIORS <span>Карта и сущности · MVP</span></footer>
     </div>

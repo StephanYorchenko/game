@@ -1,4 +1,5 @@
 import Phaser from "phaser";
+import type { OverlayCell } from "./map-overlays";
 import { getCell, getOccupant } from "@deathwarriors/game-core";
 import type {
   Position,
@@ -9,9 +10,17 @@ const CELL_SIZE = 48;
 const STEP = 51;
 const MARGIN = 24;
 const openingMarks = { open: "О", closed: "З", destroyed: "Р" };
+const overlayStyles = {
+  "attack-clear": { color: 0x86c6e8, symbol: "○" },
+  "attack-blocked": { color: 0xe8b887, symbol: "/" },
+  "move-open": { color: 0x94d6aa, symbol: "+" },
+  "move-blocked": { color: 0xde9b88, symbol: "×" },
+  "move-occupied": { color: 0xe8ca8e, symbol: "•" },
+};
 
 export interface PhaserMap {
   render(world: WorldState): void;
+  setOverlay(cells: readonly OverlayCell[]): void;
   highlight(selected: Position | null, focused: Position | null): void;
   destroy(): void;
 }
@@ -25,10 +34,13 @@ export function createPhaserMap(
   let selected: Position | null = null;
   let focused: Position | null = null;
   let disposed = false;
+  let overlayCells: readonly OverlayCell[] = [];
 
   class WorldScene extends Phaser.Scene {
     private ready = false;
     private markers: Phaser.GameObjects.Graphics | undefined;
+    private overlayGraphics: Phaser.GameObjects.Graphics | undefined;
+    private overlayTexts: Phaser.GameObjects.Text[] = [];
 
     create(): void {
       if (disposed) {
@@ -55,8 +67,14 @@ export function createPhaserMap(
       this.drawWorld();
     }
 
-    private text(x: number, y: number, value: string, color = "#e5e9de", size = 12): void {
-      this.add.text(x, y, value, {
+    private text(
+      x: number,
+      y: number,
+      value: string,
+      color = "#e5e9de",
+      size = 12,
+    ): Phaser.GameObjects.Text {
+      return this.add.text(x, y, value, {
         fontFamily: "Segoe UI, sans-serif",
         fontSize: `${size}px`,
         color,
@@ -70,6 +88,8 @@ export function createPhaserMap(
 
       this.children.removeAll(true);
       this.markers = undefined;
+      this.overlayGraphics = undefined;
+      this.overlayTexts = [];
       const width = MARGIN + world.map.width * STEP;
       const height = MARGIN + world.map.height * STEP;
       this.scale.resize(width, height);
@@ -146,9 +166,38 @@ export function createPhaserMap(
         }
       }
 
-      this.markers = this.add.graphics();
+      this.markers = this.add.graphics().setDepth(10);
+      this.drawOverlay();
       this.drawMarkers();
       root.dataset.ready = "true";
+    }
+
+    drawOverlay(): void {
+      if (!this.ready || !world || disposed) {
+        return;
+      }
+
+      if (!this.overlayGraphics) {
+        this.overlayGraphics = this.add.graphics().setDepth(5);
+      }
+
+      this.overlayGraphics.clear();
+
+      for (const text of this.overlayTexts) {
+        text.destroy();
+      }
+
+      this.overlayTexts = [];
+
+      for (const cell of overlayCells) {
+        const style = overlayStyles[cell.kind];
+        const x = MARGIN + cell.position.x * STEP;
+        const y = MARGIN + cell.position.y * STEP;
+        this.overlayGraphics.fillStyle(style.color, 0.18);
+        this.overlayGraphics.fillRect(x + 2, y + 2, CELL_SIZE - 4, CELL_SIZE - 4);
+        const text = this.text(x + 7, y + 39, style.symbol, "#ffffff", 12).setDepth(6);
+        this.overlayTexts.push(text);
+      }
     }
 
     private dashedBorder(graphics: Phaser.GameObjects.Graphics, left: number, top: number): void {
@@ -214,6 +263,10 @@ export function createPhaserMap(
       world = next;
       root.dataset.ready = "false";
       scene.drawWorld();
+    },
+    setOverlay(cells) {
+      overlayCells = cells;
+      scene.drawOverlay();
     },
     highlight(nextSelected, nextFocused) {
       selected = nextSelected;

@@ -2,6 +2,13 @@ import { createMapView } from "./map-view";
 import { destroyCellInspector, renderCellInspector } from "./cell-inspector";
 import { createScenarioControls } from "./scenario-controls";
 import "./style.css";
+import { destroyOverlayControls, renderOverlayControls } from "./overlay-controls";
+
+const overlays = document.getElementById("overlay-controls");
+
+if (!overlays) {
+  throw new Error("Не найден контейнер диагностических слоёв");
+}
 
 const root = document.getElementById("map");
 const size = document.getElementById("map-size");
@@ -16,6 +23,9 @@ if (!root || !size || !summary || !inspector || !controls || !name) {
 
 const view = createMapView(root, {
   onSelect: (selection) => renderCellInspector(inspector, selection),
+  onOverlayState(state) {
+    renderOverlayControls(overlays, state, (mode) => view.setOverlay(mode));
+  },
 });
 const scenarioControls = createScenarioControls(controls, (world, scenarioName) => {
   view.render(world);
@@ -34,4 +44,5 @@ import.meta.hot?.dispose(() => {
   scenarioControls.destroy();
   view.destroy();
   destroyCellInspector(inspector);
+  destroyOverlayControls(overlays);
 });

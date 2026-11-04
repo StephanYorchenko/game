@@ -1,5 +1,10 @@
 import { getCell, getOccupant } from "@deathwarriors/game-core";
 import { createPhaserMap } from "./phaser-map";
+import { getOverlayCells } from "./map-overlays";
+import type {
+  OverlayMode,
+  OverlayState,
+} from "./map-overlays";
 import type {
   Cell,
   Position,
@@ -49,6 +54,7 @@ function drawStructure(tile: HTMLElement, structure: Structure): string {
 
 export interface MapView {
   render(world: WorldState): void;
+  setOverlay(mode: OverlayMode): void;
   destroy(): void;
 }
 
@@ -60,6 +66,7 @@ export interface CellSelection {
 
 export interface MapViewOptions {
   onSelect?: (selection: CellSelection | null) => void;
+  onOverlayState?: (state: OverlayState) => void;
 }
 
 /** Принимает корректный WorldState; загрузку неизвестных данных выполняет core. */
@@ -80,6 +87,41 @@ export function createMapView(root: HTMLElement, options: MapViewOptions = {}): 
   let selected: Position | null = null;
   let focused: Position = { x: 0, y: 0 };
   let buttons: HTMLButtonElement[] = [];
+  let overlayMode: OverlayMode = "none";
+
+  function updateOverlay(): void {
+    const unit = currentWorld && selected ? getOccupant(currentWorld, selected) : undefined;
+    const available = unit?.kind === "unit" && unit.alive && unit.position !== null;
+
+    if (!available) {
+      overlayMode = "none";
+    }
+
+    const cells = currentWorld && available
+      ? getOverlayCells(currentWorld, unit, overlayMode)
+      : [];
+
+    for (const button of buttons) {
+      const base = button.dataset.cellLabel ?? "";
+      delete button.dataset.overlay;
+      button.setAttribute("aria-label", base);
+      button.parentElement?.setAttribute("aria-label", base);
+    }
+
+    for (const cell of cells) {
+      const button = buttonAt(cell.position);
+
+      if (button) {
+        button.dataset.overlay = cell.kind;
+        const description = `${button.dataset.cellLabel}; ${cell.label}`;
+        button.setAttribute("aria-label", description);
+        button.parentElement?.setAttribute("aria-label", description);
+      }
+    }
+
+    renderer.setOverlay(cells);
+    options.onOverlayState?.({ mode: overlayMode, available });
+  }
 
   function samePosition(left: Position | null, right: Position): boolean {
     return left?.x === right.x && left.y === right.y;
@@ -90,6 +132,7 @@ export function createMapView(root: HTMLElement, options: MapViewOptions = {}): 
   }
 
   function notifySelection(): void {
+    updateOverlay();
     const cell = currentWorld && selected ? getCell(currentWorld.map, selected) : undefined;
 
     if (!currentWorld || !selected || !cell) {
@@ -250,6 +293,7 @@ export function createMapView(root: HTMLElement, options: MapViewOptions = {}): 
           td.setAttribute("aria-label", description.join("; "));
           tile.title = description.join("; ");
           tile.setAttribute("aria-label", description.join("; "));
+          tile.dataset.cellLabel = description.join("; ");
           td.append(tile);
         }
       }
@@ -264,14 +308,18 @@ export function createMapView(root: HTMLElement, options: MapViewOptions = {}): 
         buttonAt(focused)?.focus({ preventScroll: true });
       }
     },
+    setOverlay(mode) {
+      overlayMode = mode;
+      updateOverlay();
+    },
     destroy() {
-      renderer.destroy();
       root.replaceChildren();
       currentWorld = null;
       selected = null;
       focused = { x: 0, y: 0 };
       buttons = [];
       notifySelection();
+      renderer.destroy();
       views.delete(root);
     },
   };

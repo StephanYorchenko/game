@@ -86,6 +86,35 @@ p {
   min-width: 0;
 }
 
+.overlay-controls {
+  border: 0;
+  padding: 0;
+  margin: 20px 0 12px;
+  display: grid;
+  gap: 12px;
+  font-size: 13px;
+}
+
+.overlay-controls label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.overlay-controls input {
+  accent-color: var(--accent);
+}
+
+.overlay-controls input:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
+}
+
+#overlay-controls p {
+  color: var(--muted);
+  font-size: 11px;
+}
+
 .inspector-panel {
   min-width: 0;
   padding: 24px;

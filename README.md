@@ -25,8 +25,8 @@ pnpm check
 
 ## Структура
 
-- `packages/game-core/src/` — ядро, без DOM, React, Phaser, Node.js API и графических ассетов. В конфигурации типов доступна только стандартная библиотека ECMAScript.
-- `packages/game-core/test/` — проверки пакета в Node.js. Первая проверка загружает публичную точку входа через `exports`, чтобы выявлять ошибки сборки и подключения пакета.
+- `packages/game-core/src/<domain>/` — вертикальные слайсы ядра: код, тесты и README каждого домена находятся рядом. Например, `src/death/` и `src/geometry/`. Обзор доменов — в [README пакета](packages/game-core/README.md).
+- Реализация ядра не зависит от DOM, React, Phaser, Node.js API и графических ассетов. Тесты `*.test.mjs` используют Node.js и проверяют собранный публичный API; они не входят в `dist/`. Проверка точки входа находится рядом с ней в `src/index.test.mjs`.
 - `tsconfig.base.json` — общие настройки TypeScript; пути исходников и сборки задаются в каждом пакете отдельно.
 - `dist/` и `node_modules/` не входят в Git. Все зависимости фиксируются в одном `pnpm-lock.yaml` в корне.
 - `packages/game-core/src/index.ts` — публичный API состояния и движения; дополнительные API доступны через `exports` пакета.

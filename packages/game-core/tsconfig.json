@@ -1,8 +1,14 @@
 {
   "extends": "../../tsconfig.base.json",
   "compilerOptions": {
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
     "rootDir": "src",
     "outDir": "dist"
   },
-  "include": ["src/**/*.ts"]
+  "include": ["src/**/*.ts"],
+  "tsc-alias": {
+    "resolveFullPaths": true,
+    "resolveFullExtension": ".js"
+  }
 }

@@ -12,7 +12,7 @@ export type PhaseContext =
       readonly cell: Readonly<Position>;
     }
   | {
-      readonly kind: "death" | "move_end";
+      readonly kind: "death" | "move_end" | "move_step";
       readonly ownerId: string;
       readonly cell: Readonly<Position>;
     };

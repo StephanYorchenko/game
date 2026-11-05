@@ -34,6 +34,11 @@ export type EngineOperation =
   | { kind: "heal"; target: TargetSelector; value: NumericExpression }
   | { kind: "create_damage_event"; target: { kind: "cell" }; amount: NumericExpression }
   | { kind: "place_entity"; target: { kind: "cell" }; template: EntityTemplate }
+  | {
+      kind: "add_damage_modifier";
+      event: { kind: "context_damage" } | { kind: "event"; id: string };
+      modifier: { type: "relative" | "absolute"; value: NumericExpression };
+    }
   | { kind: "add_effect"; target: TargetSelector; effect: EffectTemplate }
   | { kind: "remove_effect"; instance: InstanceTarget }
   | { kind: "modify_counter"; instance: InstanceTarget; name: string; delta: NumericExpression };
@@ -51,6 +56,10 @@ export interface OperationRuntime {
 export interface OperationEvents {
   createDamageEvent(cell: Readonly<Position>, amount: number): void;
   placeEntity?(cell: Readonly<Position>, template: EntityTemplate): boolean;
+  addDamageModifier?(
+    eventId: string,
+    modifier: { type: "relative" | "absolute"; value: number },
+  ): boolean;
 }
 
 function instanceId(reference: InstanceTarget, effect: ExecutableEffect): string {
@@ -152,6 +161,26 @@ export function executeOperation(
     }
 
     return events.placeEntity(target.position, operation.template);
+  }
+
+  if (operation.kind === "add_damage_modifier") {
+    const eventId =
+      operation.event.kind === "event"
+        ? operation.event.id
+        : effect.context.kind === "attack"
+          ? effect.context.damageEventId
+          : undefined;
+    const value = evaluateNumeric(runtime, effect, operation.modifier.value);
+
+    if (eventId === undefined || value === undefined) {
+      return false;
+    }
+
+    if (!events?.addDamageModifier) {
+      throw new Error("Для модификатора нужна очередь событий урона");
+    }
+
+    return events.addDamageModifier(eventId, { type: operation.modifier.type, value });
   }
 
   if (operation.kind === "create_damage_event") {

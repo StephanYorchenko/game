@@ -21,6 +21,10 @@
       "types": "./dist/summoning/index.d.ts",
       "import": "./dist/summoning/index.js"
     },
+    "./openings": {
+      "types": "./dist/openings/index.d.ts",
+      "import": "./dist/openings/index.js"
+    },
     "./turn": {
       "types": "./dist/turn/index.d.ts",
       "import": "./dist/turn/index.js"

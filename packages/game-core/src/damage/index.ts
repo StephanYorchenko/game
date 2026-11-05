@@ -5,6 +5,14 @@ import type { ExecutableEffect, OperationRuntime } from "../operations";
 import { createPlacementHandler } from "../summoning";
 import { getCell, getOccupant } from "../world";
 import type { Position } from "../world";
+import {
+  addDamageModifier,
+  consumeDamageModifiers,
+  createDamageModifiers,
+  registerDamageEvent,
+} from "./modifiers";
+import type { DamageModifiers } from "./modifiers";
+export * from "./modifiers";
 
 export interface CellDamageEvent {
   readonly kind: "CELL_DAMAGE";
@@ -22,6 +30,7 @@ export interface DamageOutcome {
   readonly eventId: string;
   readonly cell: Readonly<Position>;
   readonly amount: number;
+  readonly resolvedAmount: number;
   readonly targetId: string | null;
   readonly hpLoss: number;
   readonly hpBefore: number | null;
@@ -52,6 +61,7 @@ export function createCellDamage(
   state: DamageState,
   cell: Readonly<Position>,
   amount: number,
+  modifiers?: DamageModifiers,
 ): CellDamageEvent {
   if (state.version !== 1 || !Number.isSafeInteger(state.nextEventId) || state.nextEventId < 1) {
     throw new RangeError("Исчерпан или повреждён счётчик событий урона");
@@ -64,6 +74,9 @@ export function createCellDamage(
     amount,
   };
   validateEvent(event);
+  if (modifiers) {
+    registerDamageEvent(modifiers, event.id);
+  }
   state.nextEventId += 1;
   return event;
 }
@@ -73,8 +86,12 @@ export function resolveCellDamage(
   runtime: OperationRuntime,
   event: CellDamageEvent,
   turnOrder: string[],
+  modifiers?: DamageModifiers,
 ): { outcome: DamageOutcome; effects: readonly ExecutableEffect[] } {
   validateEvent(event);
+  const amount = modifiers
+    ? consumeDamageModifiers(modifiers, event.id, event.amount)
+    : event.amount;
   const cell = getCell(runtime.world.map, event.cell);
   const occupant = getOccupant(runtime.world, event.cell);
   const opening = cell?.structure;
@@ -90,6 +107,7 @@ export function resolveCellDamage(
     eventId: event.id,
     cell: { ...event.cell },
     amount: event.amount,
+    resolvedAmount: amount,
     targetId: null,
     hpLoss: 0,
     hpBefore: null,
@@ -99,7 +117,7 @@ export function resolveCellDamage(
 
   if (target) {
     const hpBefore = target.hp;
-    const hpLoss = Math.max(0, event.amount - target.resistance);
+    const hpLoss = Math.max(0, amount - target.resistance);
     target.hp = Math.max(0, hpBefore - hpLoss);
     outcome = {
       ...outcome,
@@ -135,11 +153,13 @@ export function createDamageQueue(
   state: DamageState,
   getTurnOrder: () => string[],
   onDamage?: (outcome: DamageOutcome) => void,
+  modifiers: DamageModifiers = createDamageModifiers(),
 ): EntryQueue<DamageEntry> {
   return new EntryQueue<DamageEntry>({
     copy: (entry) => {
       if (isDamage(entry)) {
         validateEvent(entry);
+        registerDamageEvent(modifiers, entry.id);
         return { kind: "CELL_DAMAGE", id: entry.id, cell: { ...entry.cell }, amount: entry.amount };
       }
 
@@ -149,7 +169,7 @@ export function createDamageQueue(
       isDamage(entry) || entry.source === "death" || isOwnerAlive(runtime.world, entry.ownerId),
     execute: (entry, context) => {
       if (isDamage(entry)) {
-        const resolution = resolveCellDamage(runtime, entry, getTurnOrder());
+        const resolution = resolveCellDamage(runtime, entry, getTurnOrder(), modifiers);
         context.emit(...resolution.effects);
         onDamage?.(resolution.outcome);
         return;
@@ -157,10 +177,12 @@ export function createDamageQueue(
 
       for (const operation of entry.operations) {
         executeOperation(runtime, entry, operation, {
-          createDamageEvent: (cell, amount) => context.emit(createCellDamage(state, cell, amount)),
+          createDamageEvent: (cell, amount) =>
+            context.emit(createCellDamage(state, cell, amount, modifiers)),
           placeEntity: createPlacementHandler(runtime, getTurnOrder, (...effects) =>
             context.emit(...effects),
           ),
+          addDamageModifier: (eventId, modifier) => addDamageModifier(modifiers, eventId, modifier),
         });
       }
 

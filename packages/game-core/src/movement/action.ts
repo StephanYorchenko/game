@@ -7,6 +7,7 @@ import { findActionPath } from "../pathfinding";
 import type { ActionTarget } from "../pathfinding";
 import type { SeededRng } from "../random";
 import { createPhaseContext } from "../targets";
+import { isActionInterrupted } from "../turn/control";
 import { getCell } from "../world";
 import type { UnitState, WorldState } from "../world";
 import type { MoveProgress, MoveTarget, PendingMoveStep } from "./state";
@@ -18,7 +19,8 @@ export interface MoveResult {
     | "attack_available"
     | "interaction_available"
     | "budget_exhausted"
-    | "no_route";
+    | "no_route"
+    | "interrupted";
 }
 
 function resolveDestination(
@@ -117,6 +119,10 @@ export function* executeMove(
         return finish("dead");
       }
 
+      if (isActionInterrupted(runtime.turnControl, actorId)) {
+        return finish("interrupted");
+      }
+
       const options = getOptions();
 
       if (getImmediateAttackTargets(runtime.world, actorId, options).length > 0) {
@@ -175,6 +181,10 @@ export function* executeMove(
 
       if (!actor.alive || !actor.position) {
         return finish("dead");
+      }
+
+      if (isActionInterrupted(runtime.turnControl, actorId)) {
+        return finish("interrupted");
       }
 
       if (step.status === "pending") {

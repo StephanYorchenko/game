@@ -53,6 +53,10 @@
       "types": "./dist/turn/index.d.ts",
       "import": "./dist/turn/index.js"
     },
+    "./actions": {
+      "types": "./dist/actions/index.d.ts",
+      "import": "./dist/actions/index.js"
+    },
     "./damage": {
       "types": "./dist/damage/index.d.ts",
       "import": "./dist/damage/index.js"

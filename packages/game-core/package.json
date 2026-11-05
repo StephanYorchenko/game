@@ -84,6 +84,10 @@
     "./effects": {
       "types": "./dist/effects/index.d.ts",
       "import": "./dist/effects/index.js"
+    },
+    "./content": {
+      "types": "./dist/content/index.d.ts",
+      "import": "./dist/content/index.js"
     }
   },
   "files": [

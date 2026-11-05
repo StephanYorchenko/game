@@ -194,7 +194,6 @@ test("первый INTERACT расходует один слот, второй M
   const result = runUnitTurn(runtime, "actor", () => ["actor"], {
     chooseAction: ({ slot }) => ({ kind: slot === 1 ? "INTERACT" : "MOVE" }),
     executeAction: function* (action, { unit }) {
-      yield* [];
       if (action.kind === "INTERACT") {
         assert.equal(openOpening(runtime.world, unit.id, "opening").allowed, true);
       } else {

@@ -127,3 +127,16 @@ test("артефакты сборки, отчёты и node_modules не про�
     assert.equal(await eslint.isPathIgnored(file), true, file);
   }
 });
+
+
+test("require-yield допускает тестовые обработчики, но остаётся ошибкой в реализации", async () => {
+  const source = [
+    "export function* handler() {",
+    '  throw new Error("expected");',
+    "}",
+  ].join("\n");
+  const production = await messages(source, "packages/new-module/src/lint-probe.js");
+  assert(production.some((entry) => entry.ruleId === "require-yield" && entry.severity === 2));
+  const handler = await messages(source, "packages/new-module/src/lint-probe.test.mjs");
+  assert.deepEqual(handler, []);
+});

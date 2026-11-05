@@ -335,7 +335,6 @@ test("ошибка обработчика и попытка вложенного
   assert.throws(
     () =>
       run(state, function* (_, context) {
-        yield* [];
         runUnitTurn(context.runtime, "target", () => state.order, {
           chooseAction: () => ({ kind: "MOVE" }),
           executeAction: function* () {},

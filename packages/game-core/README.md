@@ -9,6 +9,7 @@
 | [geometry](src/geometry/README.md) | Маски и supercover |
 | [pathfinding](src/pathfinding/README.md) | Кратчайшие пути до позиции действия |
 | [defender-targeting](src/defender-targeting/README.md) | Открытые цели защитника и булева пригодность дверей |
+| [enemy-targeting](src/enemy-targeting/README.md) | Ближайшие цели маршрута врага по правилу 97 |
 | [random](src/random/README.md) | Seeded RNG |
 | [initiative](src/initiative/README.md) | Очередь инициативы |
 | [stats](src/stats/README.md) | Характеристики, HP и лечение |

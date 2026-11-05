@@ -7,7 +7,11 @@ import { getCell } from "../world";
 import type { Mask5x5, Position, UnitState, WorldState } from "../world";
 
 export type ActionTarget =
-  | { readonly kind: "attack"; readonly position: Position }
+  | {
+      readonly kind: "attack";
+      readonly position: Position;
+      readonly actorArea?: "inside" | "outside";
+    }
   | {
       readonly kind: "interact";
       readonly position: Position;
@@ -81,7 +85,12 @@ function search(
             line,
           );
 
-    if (reachable) {
+    const areaAllowed =
+      target.kind !== "attack" ||
+      target.actorArea === undefined ||
+      getCell(world.map, current.position)?.area === target.actorArea;
+
+    if (reachable && areaAllowed) {
       nearest = current.distance;
       goals.push(currentKey);
       continue;

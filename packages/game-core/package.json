@@ -41,6 +41,10 @@
       "types": "./dist/reactions/index.d.ts",
       "import": "./dist/reactions/index.js"
     },
+    "./enemy-targeting": {
+      "types": "./dist/enemy-targeting/index.d.ts",
+      "import": "./dist/enemy-targeting/index.js"
+    },
     "./turn": {
       "types": "./dist/turn/index.d.ts",
       "import": "./dist/turn/index.js"

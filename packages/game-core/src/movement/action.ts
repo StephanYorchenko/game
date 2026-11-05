@@ -18,8 +18,7 @@ export interface MoveResult {
     | "attack_available"
     | "interaction_available"
     | "budget_exhausted"
-    | "no_route"
-    | "step_blocked";
+    | "no_route";
 }
 
 function resolveDestination(
@@ -180,10 +179,6 @@ export function* executeMove(
 
       if (step.status === "pending") {
         throw new Error("Предыдущий шаг MOVE ещё не разрешён очередью");
-      }
-
-      if (step.status === "blocked") {
-        return finish("step_blocked");
       }
 
       move.pending = null;

@@ -389,7 +389,7 @@ test("неукреплённый чужой проём не останавлив
   assert.equal(cell(runtime, 0, 0).structure.reinforcement.hp, 5);
 });
 
-test("до ENG-25 очередь не оставляет юнита на неудалённой ловушке", () => {
+test("шаг удаляет ловушку до переноса и продолжает MOVE", () => {
   const runtime = fixture();
   runtime.world.traps.push({
     id: "trap",
@@ -401,9 +401,9 @@ test("до ENG-25 очередь не оставляет юнита на неу�
     executeMove(runtime, "actor", destination, createSeededRng(17), options),
     queueFor(runtime),
   ).result;
-  assert.deepEqual(result, { stepsTaken: 0, reason: "step_blocked" });
-  assert.deepEqual(actor(runtime).position, { x: 0, y: 1 });
-  assert.equal(runtime.world.traps.length, 1);
+  assert.deepEqual(result, { stepsTaken: 2, reason: "budget_exhausted" });
+  assert.deepEqual(actor(runtime).position, { x: 2, y: 1 });
+  assert.equal(runtime.world.traps.length, 0);
 });
 
 test("реальный MOVE с нулём шагов сохраняет ACTION_END и два слота", () => {

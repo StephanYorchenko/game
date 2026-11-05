@@ -1,7 +1,12 @@
-import { getOccupant } from "../world";
-import type { Position, WorldState } from "../world";
-import { canStep } from "./eligibility";
+import { removeTrapAt } from "../traps";
+import type { Position, TrapState, WorldState } from "../world";
+import { canEnterCell, canStep } from "./eligibility";
 import type { MoveState } from "./state";
+
+export interface UnitMoveOutcome {
+  readonly moved: boolean;
+  readonly trap?: TrapState;
+}
 
 /** Вызывается только операцией общей очереди; повторное исполнение не удваивает шаг. */
 export function applyMoveStep(
@@ -11,7 +16,7 @@ export function applyMoveStep(
   stepNumber: number,
   ownerId: string,
   cell: Readonly<Position>,
-): boolean {
+): UnitMoveOutcome {
   const move = state.active.find((action) => action.id === moveId);
   const step = move?.pending;
 
@@ -24,9 +29,10 @@ export function applyMoveStep(
     step.cell.x !== cell.x ||
     step.cell.y !== cell.y
   ) {
-    return false;
+    return { moved: false };
   }
 
+  const trap = removeTrapAt(world, step.cell);
   const unit = world.units.find((actor) => actor.id === ownerId);
 
   if (
@@ -37,17 +43,33 @@ export function applyMoveStep(
     !canStep(world, unit, step.cell, step.rules)
   ) {
     step.status = "invalidated";
-    return false;
-  }
-
-  // Удаление ловушки и её DEATH подключаются отдельной задачей ENG-25.
-  if (getOccupant(world, step.cell)?.kind === "trap") {
-    step.status = "blocked";
-    return false;
+    return { moved: false, ...(trap ? { trap } : {}) };
   }
 
   unit.position = { ...step.cell };
   step.status = "applied";
   move.stepsTaken += 1;
-  return true;
+  return { moved: true, ...(trap ? { trap } : {}) };
+}
+
+/** Принудительный перенос не использует бюджет, ортогональность и направления обычного MOVE. */
+export function relocateUnit(
+  world: WorldState,
+  unitId: string,
+  cell: Readonly<Position>,
+): UnitMoveOutcome {
+  const unit = world.units.find((actor) => actor.id === unitId);
+
+  if (!unit?.alive || !unit.position) {
+    return { moved: false };
+  }
+
+  const trap = removeTrapAt(world, cell);
+  const moved = canEnterCell(world, unit, cell);
+
+  if (moved) {
+    unit.position = { ...cell };
+  }
+
+  return { moved, ...(trap ? { trap } : {}) };
 }

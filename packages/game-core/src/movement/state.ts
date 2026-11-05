@@ -11,7 +11,7 @@ export interface PendingMoveStep {
   readonly from: Position;
   readonly cell: Position;
   readonly rules: MovementOptions;
-  status: "pending" | "applied" | "invalidated" | "blocked";
+  status: "pending" | "applied" | "invalidated";
 }
 
 export interface MoveProgress {

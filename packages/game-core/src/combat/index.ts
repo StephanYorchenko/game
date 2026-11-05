@@ -1,26 +1,18 @@
-import { canReachMaskedCell } from "../geometry";
+import { checkUnitAttack } from "./eligibility";
+import type { AttackCheck } from "./eligibility";
 import type { LineOptions } from "../geometry";
 import { canAttackOpening, findOpening } from "../openings";
 import type { OperationRuntime } from "../operations";
 import type { SeededRng } from "../random";
-import { getCell } from "../world";
-import type { Position, WorldState } from "../world";
+import type { Position } from "../world";
 import { resolveAttackPhases } from "./phases";
 import type { AttackQueue } from "./phases";
-export type { AttackQueue } from "./phases";
 
-export type AttackCheck =
-  | { readonly allowed: true }
-  | {
-      readonly allowed: false;
-      readonly reason:
-        | "attacker_unavailable"
-        | "defender_unavailable"
-        | "same_side"
-        | "outside_attack"
-        | "outside_target"
-        | "unreachable";
-    };
+export { checkUnitAttack } from "./eligibility";
+export type { AttackCheck } from "./eligibility";
+export { getImmediateAttackTargets, selectImmediateAttackTarget } from "./targets";
+export type { ImmediateAttackTarget, ImmediateAttackOptions } from "./targets";
+export type { AttackQueue } from "./phases";
 
 export interface UnitAttackOutcome {
   readonly status: "resolved";
@@ -48,43 +40,6 @@ export interface AttackOptions {
   readonly line?: LineOptions;
   /** Диагностика исхода до эффектов; наблюдатель не меняет симуляцию. */
   onOutcome?(outcome: UnitAttackOutcome): void;
-}
-
-/** Допустимость одной обычной атаки; выбор цели и известность задаёт вызывающий AI. */
-export function checkUnitAttack(
-  world: WorldState,
-  attackerId: string,
-  defenderId: string,
-  line: LineOptions = {},
-): AttackCheck {
-  const attacker = world.units.find((unit) => unit.id === attackerId);
-  const defender = world.units.find((unit) => unit.id === defenderId);
-
-  if (!attacker?.alive || !attacker.position || !getCell(world.map, attacker.position)) {
-    return { allowed: false, reason: "attacker_unavailable" };
-  }
-
-  if (!defender?.alive || !defender.position || !getCell(world.map, defender.position)) {
-    return { allowed: false, reason: "defender_unavailable" };
-  }
-
-  if (attacker.side === defender.side) {
-    return { allowed: false, reason: "same_side" };
-  }
-
-  if (getCell(world.map, attacker.position)!.area !== "inside") {
-    return { allowed: false, reason: "outside_attack" };
-  }
-
-  if (attacker.side === "defender" && getCell(world.map, defender.position)!.area !== "inside") {
-    return { allowed: false, reason: "outside_target" };
-  }
-
-  if (!canReachMaskedCell(world, attacker.position, defender.position, attacker.attackMask, line)) {
-    return { allowed: false, reason: "unreachable" };
-  }
-
-  return { allowed: true };
 }
 
 function rollD6(rng: Pick<SeededRng, "d6">): number {

@@ -96,6 +96,10 @@
     "./content": {
       "types": "./dist/content/index.d.ts",
       "import": "./dist/content/index.js"
+    },
+    "./night": {
+      "types": "./dist/night/index.d.ts",
+      "import": "./dist/night/index.js"
     }
   },
   "files": [

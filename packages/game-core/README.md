@@ -17,6 +17,7 @@
 | [operations](src/operations/README.md) | Декларативные операции эффектов |
 | [death](src/death/README.md) | Граница смерти и стек DEATH |
 | [damage](src/damage/README.md) | Независимые события урона по клетке |
+| [openings](src/openings/README.md) | Открытие дверей/окон и допустимость атаки укреплений |
 | [turn](src/turn/README.md) | Фазы хода и последовательные слоты действий |
 
 `src/index.ts` сохраняет корневой API состояния и движения. Остальные домены доступны через прежние subpath imports, например `@deathwarriors/game-core/death`. Физические пути сборки задаются в exports пакета; потребители не импортируют внутренний `dist/` напрямую.

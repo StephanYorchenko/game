@@ -29,6 +29,10 @@
       "types": "./dist/openings/index.d.ts",
       "import": "./dist/openings/index.js"
     },
+    "./combat": {
+      "types": "./dist/combat/index.d.ts",
+      "import": "./dist/combat/index.js"
+    },
     "./turn": {
       "types": "./dist/turn/index.d.ts",
       "import": "./dist/turn/index.js"

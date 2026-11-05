@@ -39,6 +39,11 @@ export interface DamageOutcome {
 
 export type DamageEntry = ExecutableEffect | CellDamageEvent;
 
+export interface DamageQueue extends EntryQueue<DamageEntry> {
+  /** Резервирует ID и независимую стопку до постановки события после фаз атаки. */
+  createDamageEvent(cell: Readonly<Position>, amount: number): CellDamageEvent;
+}
+
 export function createDamageState(): DamageState {
   return { version: 1, nextEventId: 1 };
 }
@@ -154,8 +159,8 @@ export function createDamageQueue(
   getTurnOrder: () => string[],
   onDamage?: (outcome: DamageOutcome) => void,
   modifiers: DamageModifiers = createDamageModifiers(),
-): EntryQueue<DamageEntry> {
-  return new EntryQueue<DamageEntry>({
+): DamageQueue {
+  const queue = new EntryQueue<DamageEntry>({
     copy: (entry) => {
       if (isDamage(entry)) {
         validateEvent(entry);
@@ -188,5 +193,10 @@ export function createDamageQueue(
 
       context.emit(...commitUnitDeaths(runtime, getTurnOrder()).effects);
     },
+  });
+
+  return Object.assign(queue, {
+    createDamageEvent: (cell: Readonly<Position>, amount: number) =>
+      createCellDamage(state, cell, amount, modifiers),
   });
 }

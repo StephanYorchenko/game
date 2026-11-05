@@ -1,6 +1,5 @@
 import { createDamageQueue } from "../damage";
-import type { DamageEntry, DamageState } from "../damage";
-import type { EntryQueue } from "../execution";
+import type { DamageEntry, DamageQueue, DamageState } from "../damage";
 import type { OperationRuntime } from "../operations";
 import { runUnitTurn } from "../turn";
 import type { TurnAction, TurnHandlers, TurnResult } from "../turn";
@@ -81,7 +80,7 @@ export function createJournalDamageQueue(
   runtime: OperationRuntime,
   damage: DamageState,
   getTurnOrder: () => string[],
-): EntryQueue<DamageEntry> {
+): DamageQueue {
   let alive: string[] = [];
   const observed = createJournalRuntime(journal, runtime);
   return createDamageQueue(observed, damage, getTurnOrder, (outcome) => {

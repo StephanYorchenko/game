@@ -516,3 +516,69 @@ footer {
   overflow-wrap: anywhere;
   font-size: 13px;
 }
+
+.night-panel {
+  border-block: 1px solid var(--line);
+  padding-block: 20px;
+  margin-bottom: 20px;
+  min-width: 0;
+}
+
+.night-panel h2 {
+  margin-bottom: 18px;
+}
+
+.night-status {
+  color: var(--accent);
+  font-size: 13px;
+}
+
+.night-facts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px 24px;
+  margin-block: 18px;
+  font-size: 12px;
+}
+
+.night-facts dt {
+  color: var(--muted);
+  margin-bottom: 6px;
+}
+
+.night-facts dd {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+
+.scenario-controls button:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+
+.night-journal {
+  font-size: 12px;
+}
+
+.night-journal summary {
+  cursor: pointer;
+  overflow-wrap: anywhere;
+}
+
+.event-list {
+  list-style: none;
+  padding: 0;
+  max-height: 320px;
+  overflow: auto;
+  border: 1px solid var(--line);
+}
+
+.event-list li {
+  padding: 10px;
+  border-bottom: 1px solid var(--line);
+}
+
+.event-list pre {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}

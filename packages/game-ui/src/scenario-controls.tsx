@@ -11,13 +11,13 @@ import { createDemoWorld } from "./demo";
 
 interface ScenarioControlsProps {
   onWorld: (world: WorldState, name: string) => void;
+  onLoadStart: () => void;
+  state: { world: WorldState; requestVersion: number };
 }
 
-function ScenarioControls({ onWorld }: ScenarioControlsProps) {
-  const [initialWorld] = useState(createDemoWorld);
+function ScenarioControls({ onWorld, onLoadStart, state }: ScenarioControlsProps) {
+  const [initialWorld] = useState(() => state.world);
   const [error, setError] = useState("");
-  const world = useRef(initialWorld);
-  const requestVersion = useRef(0);
   const active = useRef(true);
 
   useEffect(() => {
@@ -26,13 +26,13 @@ function ScenarioControls({ onWorld }: ScenarioControlsProps) {
 
     return () => {
       active.current = false;
-      requestVersion.current++;
+      state.requestVersion++;
     };
-  }, [initialWorld, onWorld]);
+  }, [initialWorld, onWorld, state]);
 
   function show(next: WorldState, name: string): void {
     onWorld(next, name);
-    world.current = next;
+    state.world = next;
     setError("");
   }
 
@@ -44,18 +44,19 @@ function ScenarioControls({ onWorld }: ScenarioControlsProps) {
     }
 
     event.currentTarget.value = "";
-    const version = ++requestVersion.current;
+    const version = ++state.requestVersion;
+    onLoadStart();
 
     try {
       const json = await file.text();
 
-      if (!active.current || version !== requestVersion.current) {
+      if (!active.current || version !== state.requestVersion) {
         return;
       }
 
       show(parseWorld(json), file.name);
     } catch (error) {
-      if (!active.current || version !== requestVersion.current) {
+      if (!active.current || version !== state.requestVersion) {
         return;
       }
 
@@ -66,12 +67,12 @@ function ScenarioControls({ onWorld }: ScenarioControlsProps) {
   }
 
   function reset(): void {
-    requestVersion.current++;
+    state.requestVersion++;
     show(createDemoWorld(), "Дом у опушки");
   }
 
   function download(): void {
-    const blob = new Blob([serializeWorld(world.current)], { type: "application/json" });
+    const blob = new Blob([serializeWorld(state.world)], { type: "application/json" });
     const url = URL.createObjectURL(blob);
     const link = document.createElement("a");
     link.href = url;
@@ -101,11 +102,17 @@ function ScenarioControls({ onWorld }: ScenarioControlsProps) {
 export function createScenarioControls(
   container: HTMLElement,
   onWorld: ScenarioControlsProps["onWorld"],
-): { destroy(): void } {
+  onLoadStart: () => void = () => {},
+): { setWorld(world: WorldState): void; destroy(): void } {
+  const state = { world: createDemoWorld(), requestVersion: 0 };
   const root = createRoot(container);
-  root.render(<ScenarioControls onWorld={onWorld} />);
+  root.render(<ScenarioControls onWorld={onWorld} onLoadStart={onLoadStart} state={state} />);
 
   return {
+    setWorld(world) {
+      state.requestVersion++;
+      state.world = world;
+    },
     destroy() {
       root.unmount();
     },

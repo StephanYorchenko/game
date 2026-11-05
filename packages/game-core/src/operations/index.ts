@@ -18,6 +18,8 @@ import type { Characteristic } from "../stats";
 import type { EntityTemplate, SummoningState } from "../summoning";
 import { createPhaseContext, resolveTargets } from "../targets";
 import type { PhaseContext, TargetSelector } from "../targets";
+import { interruptTurnExecution } from "../turn/control";
+import type { TurnControlState } from "../turn/control";
 import type { Position, TrapState, UnitStats, WorldState } from "../world";
 
 export type InstanceTarget = { kind: "self" } | { kind: "instance"; id: string };
@@ -40,6 +42,7 @@ export type EffectTemplate = {
 };
 
 export type EngineOperation =
+  | { kind: "interrupt_action" | "interrupt_turn"; target: TargetSelector }
   | { kind: "move_step"; moveId: string; step: number }
   | { kind: "move_unit"; target: TargetSelector }
   | { kind: "modify_stat"; target: TargetSelector; stat: Characteristic; delta: NumericExpression }
@@ -67,6 +70,7 @@ export interface OperationRuntime {
   readonly effects: EffectStore<EngineOperation>;
   readonly summoning?: SummoningState;
   readonly movement?: MoveState;
+  readonly turnControl?: TurnControlState;
   readonly observer?: OperationObserver;
 }
 
@@ -185,6 +189,29 @@ function applyOperation(
   operation: EngineOperation,
   events?: OperationEvents,
 ): boolean {
+  if (operation.kind === "interrupt_action" || operation.kind === "interrupt_turn") {
+    const targets = resolveTargets(runtime.world, effect.context, operation.target, {
+      livingUnitsOnly: true,
+    });
+
+    if (targets.kind !== "entities") {
+      return false;
+    }
+
+    let applied = false;
+
+    for (const unit of targets.entities) {
+      applied =
+        interruptTurnExecution(
+          runtime.turnControl,
+          unit.id,
+          operation.kind === "interrupt_action" ? "action" : "turn",
+        ) || applied;
+    }
+
+    return applied;
+  }
+
   if (operation.kind === "move_step" || operation.kind === "move_unit") {
     if (!events?.trapDestroyed) {
       throw new Error("Перемещение требует очередь последствий ловушки");

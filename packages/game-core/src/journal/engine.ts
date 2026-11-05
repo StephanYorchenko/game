@@ -84,8 +84,18 @@ export function createJournalDamageQueue(
   damage: DamageState,
   getTurnOrder: () => string[],
 ): DamageQueue {
+  return journalDamageQueue(journal, runtime, damage, getTurnOrder, true);
+}
+
+function journalDamageQueue(
+  journal: EventJournal,
+  runtime: OperationRuntime,
+  damage: DamageState,
+  getTurnOrder: () => string[],
+  observeOperations: boolean,
+): DamageQueue {
   let alive: string[] = [];
-  const observed = createJournalRuntime(journal, runtime);
+  const observed = observeOperations ? createJournalRuntime(journal, runtime) : runtime;
   return createDamageQueue(observed, damage, getTurnOrder, (outcome) => {
     journal.append("damage", outcome);
   }).observe({
@@ -134,7 +144,8 @@ export function runJournaledTurn<Action extends TurnAction>(
       journal.append("action", action);
       return action;
     },
-    createQueue: () => createJournalDamageQueue(journal, runtime, damage, getTurnOrder),
+    createQueue: (controlled) =>
+      journalDamageQueue(journal, controlled, damage, getTurnOrder, false),
   });
 
   if (result.actions.length === 0 && result.status !== "completed") {

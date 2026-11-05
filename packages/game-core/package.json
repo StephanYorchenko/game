@@ -33,6 +33,10 @@
       "types": "./dist/combat/index.d.ts",
       "import": "./dist/combat/index.js"
     },
+    "./defender-targeting": {
+      "types": "./dist/defender-targeting/index.d.ts",
+      "import": "./dist/defender-targeting/index.js"
+    },
     "./turn": {
       "types": "./dist/turn/index.d.ts",
       "import": "./dist/turn/index.js"

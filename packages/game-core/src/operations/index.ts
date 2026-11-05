@@ -9,14 +9,16 @@ import {
   inheritReactionCause,
 } from "../reactions";
 import type { ReactionCause, ReactionPhase } from "../reactions";
-import { applyMoveStep } from "../movement/step";
+import { applyMoveStep, relocateUnit } from "../movement/step";
+import type { UnitMoveOutcome } from "../movement/step";
 import type { MoveState } from "../movement/state";
+import { scheduleTrapDeaths } from "../traps";
 import { heal, modifyHP, modifyStat } from "../stats";
 import type { Characteristic } from "../stats";
 import type { EntityTemplate, SummoningState } from "../summoning";
 import { createPhaseContext, resolveTargets } from "../targets";
 import type { PhaseContext, TargetSelector } from "../targets";
-import type { Position, UnitStats, WorldState } from "../world";
+import type { Position, TrapState, UnitStats, WorldState } from "../world";
 
 export type InstanceTarget = { kind: "self" } | { kind: "instance"; id: string };
 export type NumericExpression =
@@ -39,6 +41,7 @@ export type EffectTemplate = {
 
 export type EngineOperation =
   | { kind: "move_step"; moveId: string; step: number }
+  | { kind: "move_unit"; target: TargetSelector }
   | { kind: "modify_stat"; target: TargetSelector; stat: Characteristic; delta: NumericExpression }
   | { kind: "modify_hp"; target: TargetSelector; delta: NumericExpression }
   | { kind: "heal"; target: TargetSelector; value: NumericExpression }
@@ -73,6 +76,7 @@ export interface OperationObserver {
 }
 
 export interface OperationEvents {
+  trapDestroyed?(trap: TrapState): void;
   createDamageEvent?(cell: Readonly<Position>, amount: number): void;
   triggerReaction?(ownerId: string, phase: ReactionPhase, context: PhaseContext): boolean;
   placeEntity?(cell: Readonly<Position>, template: EntityTemplate): boolean;
@@ -181,20 +185,54 @@ function applyOperation(
   operation: EngineOperation,
   events?: OperationEvents,
 ): boolean {
-  if (operation.kind === "move_step") {
+  if (operation.kind === "move_step" || operation.kind === "move_unit") {
+    if (!events?.trapDestroyed) {
+      throw new Error("Перемещение требует очередь последствий ловушки");
+    }
+
+    const trapDestroyed = events.trapDestroyed;
+    const complete = (outcome: UnitMoveOutcome): boolean => {
+      if (outcome.trap) {
+        trapDestroyed({ ...outcome.trap, position: { ...outcome.trap.position } });
+      }
+
+      return outcome.moved || outcome.trap !== undefined;
+    };
+
+    if (operation.kind === "move_unit") {
+      const cell = resolveTargets(runtime.world, effect.context, { kind: "cell" });
+      const targets = resolveTargets(runtime.world, effect.context, operation.target, {
+        livingUnitsOnly: true,
+      });
+
+      if (cell.kind !== "cell" || targets.kind !== "entities") {
+        return false;
+      }
+
+      let applied = false;
+
+      for (const unit of targets.entities) {
+        applied = complete(relocateUnit(runtime.world, unit.id, cell.position)) || applied;
+      }
+
+      return applied;
+    }
+
     if (!runtime.movement) {
       throw new Error("Для шага нужно состояние createMoveState()");
     }
 
     return (
       effect.context.kind === "move_step" &&
-      applyMoveStep(
-        runtime.world,
-        runtime.movement,
-        operation.moveId,
-        operation.step,
-        effect.ownerId,
-        effect.context.cell,
+      complete(
+        applyMoveStep(
+          runtime.world,
+          runtime.movement,
+          operation.moveId,
+          operation.step,
+          effect.ownerId,
+          effect.context.cell,
+        ),
       )
     );
   }
@@ -380,6 +418,7 @@ export function createOperationQueue(
   >,
   events?: (context: EffectExecution<EngineOperation, ExecutableEffect>) => OperationEvents,
 ): ExecutionQueue<EngineOperation, ExecutableEffect> {
+  let destroyedTraps: TrapState[] = [];
   const activeContext = (
     context: EffectExecution<EngineOperation, ExecutableEffect>,
   ): EffectExecution<EngineOperation, ExecutableEffect> => {
@@ -401,9 +440,16 @@ export function createOperationQueue(
       const active = activeContext(context);
       executeOperation(runtime, active.effect, operation, {
         ...events?.(active),
+        trapDestroyed: (trap) => destroyedTraps.push(trap),
         triggerReaction: createReactionHandler(runtime, (...effects) => active.emit(...effects)),
       });
     },
-    afterEffect: (context) => boundaries.afterEffect?.(activeContext(context)),
+    afterEffect: (context) => {
+      const active = activeContext(context);
+      const traps = destroyedTraps;
+      destroyedTraps = [];
+      active.emit(...scheduleTrapDeaths(runtime, traps));
+      boundaries.afterEffect?.(active);
+    },
   });
 }

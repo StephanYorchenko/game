@@ -10,8 +10,9 @@ import {
 } from "../reactions";
 import type { ReactionCause } from "../reactions";
 import { createPlacementHandler } from "../summoning";
+import { scheduleTrapDeaths } from "../traps";
 import { getCell, getOccupant } from "../world";
-import type { Position } from "../world";
+import type { Position, TrapState } from "../world";
 import {
   addDamageModifier,
   consumeDamageModifiers,
@@ -211,8 +212,11 @@ export function createDamageQueue(
         return;
       }
 
+      const destroyedTraps: TrapState[] = [];
+
       for (const operation of entry.operations) {
         executeOperation(runtime, inheritReactionCause(entry, cause), operation, {
+          trapDestroyed: (trap) => destroyedTraps.push(trap),
           createDamageEvent: (cell, amount) =>
             emit(createCellDamage(state, cell, amount, modifiers)),
           placeEntity: createPlacementHandler(runtime, getTurnOrder, (...effects) =>
@@ -223,6 +227,7 @@ export function createDamageQueue(
         });
       }
 
+      emit(...scheduleTrapDeaths(runtime, destroyedTraps));
       emit(...commitUnitDeaths(runtime, getTurnOrder()).effects);
     },
   });

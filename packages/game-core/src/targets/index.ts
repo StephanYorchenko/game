@@ -1,4 +1,4 @@
-import { getCell } from "../world";
+import { getCell, getOccupant } from "../world";
 import type { Position, Structure, TrapState, UnitState, WorldState } from "../world";
 
 export type PhaseContext =
@@ -18,7 +18,9 @@ export type PhaseContext =
     };
 
 export type TargetSelector =
-  | { readonly kind: "owner" | "attacker" | "defender" | "cell" | "allies" | "enemies" }
+  | {
+      readonly kind: "owner" | "attacker" | "defender" | "cell" | "occupant" | "allies" | "enemies";
+    }
   | { readonly kind: "unit"; readonly id: string };
 
 export type EffectEntity = UnitState | TrapState | Structure;
@@ -79,7 +81,16 @@ export function resolveTargets(
 
   let entities: EffectEntity[];
 
-  if (selector.kind === "allies" || selector.kind === "enemies") {
+  if (selector.kind === "occupant") {
+    const cell = resolveTargets(world, context, { kind: "cell" });
+
+    if (cell.kind !== "cell") {
+      return cell;
+    }
+
+    const occupant = getOccupant(world, cell.position);
+    entities = occupant ? [occupant] : [];
+  } else if (selector.kind === "allies" || selector.kind === "enemies") {
     const owner = findEntity(world, context.ownerId);
 
     if (!owner) {

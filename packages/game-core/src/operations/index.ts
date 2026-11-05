@@ -9,6 +9,8 @@ import {
   inheritReactionCause,
 } from "../reactions";
 import type { ReactionCause, ReactionPhase } from "../reactions";
+import { applyMoveStep } from "../movement/step";
+import type { MoveState } from "../movement/state";
 import { heal, modifyHP, modifyStat } from "../stats";
 import type { Characteristic } from "../stats";
 import type { EntityTemplate, SummoningState } from "../summoning";
@@ -36,6 +38,7 @@ export type EffectTemplate = {
 };
 
 export type EngineOperation =
+  | { kind: "move_step"; moveId: string; step: number }
   | { kind: "modify_stat"; target: TargetSelector; stat: Characteristic; delta: NumericExpression }
   | { kind: "modify_hp"; target: TargetSelector; delta: NumericExpression }
   | { kind: "heal"; target: TargetSelector; value: NumericExpression }
@@ -60,6 +63,7 @@ export interface OperationRuntime {
   readonly world: WorldState;
   readonly effects: EffectStore<EngineOperation>;
   readonly summoning?: SummoningState;
+  readonly movement?: MoveState;
   readonly observer?: OperationObserver;
 }
 
@@ -177,6 +181,24 @@ function applyOperation(
   operation: EngineOperation,
   events?: OperationEvents,
 ): boolean {
+  if (operation.kind === "move_step") {
+    if (!runtime.movement) {
+      throw new Error("Для шага нужно состояние createMoveState()");
+    }
+
+    return (
+      effect.context.kind === "move_step" &&
+      applyMoveStep(
+        runtime.world,
+        runtime.movement,
+        operation.moveId,
+        operation.step,
+        effect.ownerId,
+        effect.context.cell,
+      )
+    );
+  }
+
   if (operation.kind === "trigger_reaction") {
     const targets = resolveTargets(runtime.world, effect.context, operation.target, {
       livingUnitsOnly: true,

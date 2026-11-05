@@ -1,12 +1,13 @@
-import type { DamageQueue } from "../damage";
 import { canReachMaskedCell } from "../geometry";
 import type { LineOptions } from "../geometry";
-import { schedulePhase } from "../operations";
+import { canAttackOpening, findOpening } from "../openings";
 import type { OperationRuntime } from "../operations";
 import type { SeededRng } from "../random";
-import type { PhaseContext } from "../targets";
 import { getCell } from "../world";
 import type { Position, WorldState } from "../world";
+import { resolveAttackPhases } from "./phases";
+import type { AttackQueue } from "./phases";
+export type { AttackQueue } from "./phases";
 
 export type AttackCheck =
   | { readonly allowed: true }
@@ -99,7 +100,7 @@ function rollD6(rng: Pick<SeededRng, "d6">): number {
 /** Вызывать между разрешёнными пакетами текущей очереди, не внутри эффекта. */
 export function resolveUnitAttack(
   runtime: OperationRuntime,
-  queue: Pick<DamageQueue, "size" | "enqueue" | "drain" | "createDamageEvent">,
+  queue: AttackQueue,
   attackerId: string,
   defenderId: string,
   rng: Pick<SeededRng, "d6">,
@@ -139,42 +140,74 @@ export function resolveUnitAttack(
     success,
     damageEventId: event?.id ?? null,
   };
-  const context = (ownerId: string): PhaseContext => ({
-    kind: "attack",
-    ownerId,
-    attackerId,
-    defenderId,
-    cell,
-    ...(event ? { damageEventId: event.id } : {}),
-  });
   options.onOutcome?.(outcome);
+  resolveAttackPhases(runtime, queue, { attackerId, defenderId, cell, success, event });
 
-  queue.enqueue(
-    ...schedulePhase(
-      runtime.effects,
+  return outcome;
+}
+
+export interface OpeningAttackOutcome {
+  readonly status: "resolved";
+  readonly attackerId: string;
+  readonly defenderId: string;
+  readonly cell: Readonly<Position>;
+  readonly success: true;
+  readonly damageEventId: string;
+}
+
+export type OpeningAttackResult =
+  | OpeningAttackOutcome
+  | {
+      readonly status: "unavailable";
+      readonly attackerId: string;
+      readonly defenderId: string;
+      readonly reason: "opening_unavailable";
+    };
+
+export interface OpeningAttackOptions {
+  readonly line?: LineOptions;
+  onOutcome?(outcome: OpeningAttackOutcome): void;
+}
+
+/** Гарантированная атака закрытого укрепления: обычная маска, без бросков попадания. */
+export function resolveOpeningAttack(
+  runtime: OperationRuntime,
+  queue: AttackQueue,
+  attackerId: string,
+  openingId: string,
+  options: OpeningAttackOptions = {},
+): OpeningAttackResult {
+  if (queue.size !== 0) {
+    throw new Error("До начала атаки предыдущий пакет очереди должен быть разрешён");
+  }
+
+  if (!canAttackOpening(runtime.world, attackerId, openingId, options.line)) {
+    return {
+      status: "unavailable",
       attackerId,
-      success ? "ATTACK_SUCCESS" : "ATTACK_FAILURE",
-      context(attackerId),
-    ),
-  );
-  queue.drain();
-
-  if (defender.alive) {
-    queue.enqueue(
-      ...schedulePhase(
-        runtime.effects,
-        defenderId,
-        success ? "DEFENSE_FAILURE" : "DEFENSE_SUCCESS",
-        context(defenderId),
-      ),
-    );
-    queue.drain();
+      defenderId: openingId,
+      reason: "opening_unavailable",
+    };
   }
 
-  if (event) {
-    queue.enqueue(event);
-    queue.drain();
-  }
-
+  const attacker = runtime.world.units.find((unit) => unit.id === attackerId)!;
+  const { position } = findOpening(runtime.world, openingId)!;
+  const event = queue.createDamageEvent(position, attacker.stats.damage);
+  const outcome: OpeningAttackOutcome = {
+    status: "resolved",
+    attackerId,
+    defenderId: openingId,
+    cell: { ...position },
+    success: true,
+    damageEventId: event.id,
+  };
+  options.onOutcome?.(outcome);
+  resolveAttackPhases(runtime, queue, {
+    attackerId,
+    defenderId: openingId,
+    cell: position,
+    success: true,
+    event,
+  });
   return outcome;
 }

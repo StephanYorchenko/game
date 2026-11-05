@@ -20,6 +20,8 @@ import { createPhaseContext, resolveTargets } from "../targets";
 import type { PhaseContext, TargetSelector } from "../targets";
 import { interruptTurnExecution } from "../turn/control";
 import type { TurnControlState } from "../turn/control";
+import { tryDiscoverTrap } from "../trap-discovery";
+import type { TrapDiscoveryService } from "../trap-discovery";
 import type { Position, TrapState, UnitStats, WorldState } from "../world";
 
 export type InstanceTarget = { kind: "self" } | { kind: "instance"; id: string };
@@ -42,6 +44,7 @@ export type EffectTemplate = {
 };
 
 export type EngineOperation =
+  | { kind: "discover_trap"; trapId: string; probability: NumericExpression }
   | { kind: "interrupt_action" | "interrupt_turn"; target: TargetSelector }
   | { kind: "move_step"; moveId: string; step: number }
   | { kind: "move_unit"; target: TargetSelector }
@@ -71,6 +74,7 @@ export interface OperationRuntime {
   readonly summoning?: SummoningState;
   readonly movement?: MoveState;
   readonly turnControl?: TurnControlState;
+  readonly trapDiscovery?: TrapDiscoveryService;
   readonly observer?: OperationObserver;
 }
 
@@ -189,6 +193,40 @@ function applyOperation(
   operation: EngineOperation,
   events?: OperationEvents,
 ): boolean {
+  if (operation.kind === "discover_trap") {
+    if (effect.phase !== "TURN_START") {
+      return false;
+    }
+
+    const probability = evaluateNumeric(runtime, effect, operation.probability);
+
+    if (probability === undefined) {
+      return false;
+    }
+
+    const service = runtime.trapDiscovery;
+
+    if (!service) {
+      throw new Error("Для обнаружения нужен runtime.trapDiscovery с seeded RNG");
+    }
+
+    const result = tryDiscoverTrap(
+      runtime.world,
+      effect.ownerId,
+      operation.trapId,
+      probability,
+      service.rng,
+      service.getOptions?.(effect.ownerId),
+    );
+
+    if (result.status === "unavailable") {
+      return false;
+    }
+
+    service.onOutcome?.(result);
+    return true;
+  }
+
   if (operation.kind === "interrupt_action" || operation.kind === "interrupt_turn") {
     const targets = resolveTargets(runtime.world, effect.context, operation.target, {
       livingUnitsOnly: true,

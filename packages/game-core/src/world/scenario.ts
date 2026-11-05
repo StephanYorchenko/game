@@ -276,6 +276,7 @@ export function loadWorld(input: unknown): WorldState {
       "stats",
       "attackMask",
       "keywords",
+      "knownTrapIds",
     ]);
 
     if (unit.kind !== "unit") {
@@ -313,6 +314,13 @@ export function loadWorld(input: unknown): WorldState {
       keywords: array(unit.keywords, `${path}.keywords`).map((value, k) =>
         text(value, `${path}.keywords[${k}]`),
       ),
+      ...(Object.hasOwn(unit, "knownTrapIds")
+        ? {
+            knownTrapIds: array(unit.knownTrapIds, `${path}.knownTrapIds`).map((value, k) =>
+              text(value, `${path}.knownTrapIds[${k}]`),
+            ),
+          }
+        : {}),
     };
   });
   const traps = array(root.traps, "$.traps").map((value, i): TrapState => {

@@ -29,6 +29,10 @@
       "types": "./dist/openings/index.d.ts",
       "import": "./dist/openings/index.js"
     },
+    "./trap-discovery": {
+      "types": "./dist/trap-discovery/index.d.ts",
+      "import": "./dist/trap-discovery/index.js"
+    },
     "./combat": {
       "types": "./dist/combat/index.d.ts",
       "import": "./dist/combat/index.js"

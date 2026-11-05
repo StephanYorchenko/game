@@ -59,6 +59,8 @@ export interface UnitState {
   stats: UnitStats;
   attackMask: Mask5x5;
   keywords: string[];
+  /** Индивидуальное знание текущей ночи; не переносится другим владельцам. */
+  knownTrapIds?: string[];
 }
 
 export interface TrapState {

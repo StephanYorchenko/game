@@ -61,7 +61,11 @@ export function canEnterCell(
   }
 
   if (occupant?.kind === "trap") {
-    return unit.side === "enemy" && !options.knownTrapIds?.includes(occupant.id);
+    return (
+      unit.side === "enemy" &&
+      !unit.knownTrapIds?.includes(occupant.id) &&
+      !options.knownTrapIds?.includes(occupant.id)
+    );
   }
 
   return true;

@@ -1,4 +1,5 @@
 import { EFFECT_PHASES } from "../effects";
+import type { EffectPhase } from "../effects";
 import type { EffectTemplate } from "../operations";
 import type { EntityTemplate } from "../summoning";
 import type { ContentOperation, ContentPack, ContentOpening } from "./model";
@@ -35,7 +36,7 @@ function amount(value: unknown, path: string, minimum = -Infinity): void {
   }
 }
 
-function operation(value: unknown, path: string): Reference[] {
+function operation(value: unknown, path: string, phase: EffectPhase): Reference[] {
   const op = object(value, path);
   const kind = choice(op.kind, `${path}.kind`, [
     "move_unit",
@@ -51,9 +52,24 @@ function operation(value: unknown, path: string): Reference[] {
     "modify_counter",
     "interrupt_action",
     "interrupt_turn",
+    "discover_trap",
   ]);
 
   switch (kind) {
+    case "discover_trap":
+      object(value, path, ["kind", "trapId", "probability"]);
+      text(op.trapId, `${path}.trapId`);
+      numeric(op.probability, `${path}.probability`);
+
+      if (typeof op.probability === "number" && (op.probability < 0 || op.probability > 1)) {
+        throw new ContentValidationError(`${path}.probability`, "ожидается вероятность в [0, 1]");
+      }
+
+      if (phase !== "TURN_START") {
+        throw new ContentValidationError(`${path}.kind`, "discover_trap допускается в TURN_START");
+      }
+
+      break;
     case "modify_stat":
       object(value, path, ["kind", "target", "stat", "delta"]);
       selector(op.target, `${path}.target`);
@@ -179,10 +195,10 @@ export function loadContentPack(input: unknown): ContentPack {
       let references: Reference[];
 
       if (group === "effects") {
-        choice(definition.phase, `${path}.phase`, EFFECT_PHASES);
+        const phase = choice(definition.phase, `${path}.phase`, EFFECT_PHASES);
         object(definition.state, `${path}.state`);
         references = array(definition.operations, `${path}.operations`).flatMap((op, i) =>
-          operation(op, `${path}.operations[${i}]`),
+          operation(op, `${path}.operations[${i}]`, phase),
         );
       } else {
         references = effectRefs(definition.effectIds, `${path}.effectIds`);

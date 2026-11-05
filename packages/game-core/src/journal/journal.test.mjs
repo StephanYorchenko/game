@@ -367,3 +367,22 @@ test("недоступный владелец получает причину п
   );
   assert.equal(journal.snapshot()[0].data.reason, "missing");
 });
+
+
+test("курсор журнала сохраняет номера, изолирует дельты и отклоняет чужую границу", () => {
+  const journal = new EventJournal();
+  assert.equal(journal.size, 0);
+  assert.deepEqual(journal.snapshot(0), []);
+  journal.append("first", { hp: 3 });
+  const cursor = journal.size;
+  journal.append("second", { hp: 2 });
+  const delta = journal.snapshot(cursor);
+  assert.deepEqual(delta.map((entry) => entry.sequence), [2]);
+  delta[0].data.hp = 0;
+  assert.equal(journal.snapshot(cursor)[0].data.hp, 2);
+  assert.deepEqual(journal.snapshot(journal.size), []);
+
+  for (const invalid of [-1, 0.5, 3, NaN, Infinity]) {
+    assert.throws(() => journal.snapshot(invalid), RangeError);
+  }
+});

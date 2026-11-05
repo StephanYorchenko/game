@@ -56,8 +56,16 @@ export class EventJournal {
     });
   }
 
-  snapshot(): readonly JournalEntry[] {
-    return copyJson(this.entries) as unknown as JournalEntry[];
+  get size(): number {
+    return this.entries.length;
+  }
+
+  snapshot(afterSequence = 0): readonly JournalEntry[] {
+    if (!Number.isSafeInteger(afterSequence) || afterSequence < 0 || afterSequence > this.size) {
+      throw new RangeError("Курсор журнала должен указывать на существующую границу записей");
+    }
+
+    return copyJson(this.entries.slice(afterSequence)) as unknown as JournalEntry[];
   }
 
   publicSnapshot(): readonly JournalEntry[] {

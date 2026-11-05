@@ -100,6 +100,10 @@
     "./night": {
       "types": "./dist/night/index.d.ts",
       "import": "./dist/night/index.js"
+    },
+    "./simulation": {
+      "types": "./dist/simulation/index.d.ts",
+      "import": "./dist/simulation/index.js"
     }
   },
   "files": [
@@ -112,7 +116,8 @@
     "build": "tsc --project tsconfig.json && tsc-alias --project tsconfig.json",
     "typecheck": "tsc --project tsconfig.json --noEmit",
     "test": "node --test",
-    "check": "pnpm run typecheck && pnpm run build && pnpm test"
+    "check": "pnpm run typecheck && pnpm run build && pnpm test",
+    "example:simulation": "node src/simulation/example.mjs"
   },
   "devDependencies": {
     "tsc-alias": "1.9.10",

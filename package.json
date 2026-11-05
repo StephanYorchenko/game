@@ -11,6 +11,7 @@
     "test": "pnpm -r run test",
     "check": "pnpm -r run check",
     "dev:ui": "pnpm --filter @deathwarriors/game-core build && pnpm --filter @deathwarriors/game-ui dev",
-    "test:ui": "pnpm --filter @deathwarriors/game-core build && pnpm --filter @deathwarriors/game-ui build && pnpm --filter @deathwarriors/game-ui test"
+    "test:ui": "pnpm --filter @deathwarriors/game-core build && pnpm --filter @deathwarriors/game-ui build && pnpm --filter @deathwarriors/game-ui test",
+    "example:simulation": "pnpm --filter @deathwarriors/game-core build && pnpm --filter @deathwarriors/game-core example:simulation"
   }
 }

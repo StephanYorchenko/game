@@ -17,6 +17,10 @@
       "types": "./dist/geometry/index.d.ts",
       "import": "./dist/geometry/index.js"
     },
+    "./summoning": {
+      "types": "./dist/summoning/index.d.ts",
+      "import": "./dist/summoning/index.js"
+    },
     "./openings": {
       "types": "./dist/openings/index.d.ts",
       "import": "./dist/openings/index.js"

@@ -1,0 +1,30 @@
+{
+  "definitionId": "spot-snare-example",
+  "phase": "TURN_START",
+  "state": {},
+  "operations": [
+    {
+      "kind": "discover_trap",
+      "trapId": "snare-1",
+      "probability": {
+        "kind": "max",
+        "left": 0,
+        "right": {
+          "kind": "min",
+          "left": 1,
+          "right": {
+            "kind": "multiply",
+            "left": {
+              "kind": "stat",
+              "target": {
+                "kind": "owner"
+              },
+              "stat": "agility"
+            },
+            "right": 0.1
+          }
+        }
+      }
+    }
+  ]
+}

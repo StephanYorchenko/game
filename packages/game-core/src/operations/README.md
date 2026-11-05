@@ -52,3 +52,7 @@ schedulePhase проверяет владельца, но не запускае�
 Операции `interrupt_action` и `interrupt_turn` адресуют текущего живого владельца хода через
 обычный target. Они меняют control, сохраняя атомарность эффекта и независимые последствия.
 Семантика фаз — в [домене turn](../turn/README.md).
+
+Операция discover_trap в TURN_START читает ограниченную формулу вероятности и проверяет
+явно заданный trapId. Требует runtime.trapDiscovery с общим seeded RNG; критерии попытки,
+индивидуальное знание и конкретный пример описаны в [домене trap-discovery](../trap-discovery/README.md).

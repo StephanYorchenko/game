@@ -43,10 +43,7 @@ const showWorld = (world: WorldState, scenarioName: string): void => {
   ].join(" · ");
 };
 
-const nightControls = createNightControls(night, (world, scenarioName) => {
-  scenarioControls.setWorld(world);
-  showWorld(world, scenarioName);
-});
+const nightControls = createNightControls(night, showNightWorld);
 const scenarioControls = createScenarioControls(
   controls,
   (world, scenarioName) => {
@@ -55,6 +52,11 @@ const scenarioControls = createScenarioControls(
   },
   () => nightControls.pause(),
 );
+
+function showNightWorld(world: WorldState, scenarioName: string): void {
+  scenarioControls.setWorld(world);
+  showWorld(world, scenarioName);
+}
 
 import.meta.hot?.dispose(() => {
   scenarioControls.destroy();

@@ -345,12 +345,13 @@ function applyOperation(
   }
 
   if (operation.kind === "add_damage_modifier") {
-    const eventId =
-      operation.event.kind === "event"
-        ? operation.event.id
-        : effect.context.kind === "attack"
-          ? effect.context.damageEventId
-          : undefined;
+    let eventId: string | undefined;
+
+    if (operation.event.kind === "event") {
+      eventId = operation.event.id;
+    } else if (effect.context.kind === "attack") {
+      eventId = effect.context.damageEventId;
+    }
     const value = evaluateNumeric(runtime, effect, operation.modifier.value);
 
     if (eventId === undefined || value === undefined) {

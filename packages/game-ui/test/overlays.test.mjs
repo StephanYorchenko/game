@@ -95,11 +95,13 @@ test("проходимость и занятость используют core, 
     for (let x = 0; x < world.map.width; x++) {
       const open = canEnterCell(world, unit, { x, y });
       const occupied = getOccupant(world, { x, y });
-      expected.push({
-        x,
-        y,
-        kind: open ? "move-open" : occupied ? "move-occupied" : "move-blocked",
-      });
+      let kind = occupied ? "move-occupied" : "move-blocked";
+
+      if (open) {
+        kind = "move-open";
+      }
+
+      expected.push({ x, y, kind });
     }
   }
 

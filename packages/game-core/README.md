@@ -14,6 +14,7 @@
 | [stats](src/stats/README.md) | Характеристики, HP и лечение |
 | [execution](src/execution/README.md) | Очередь атомарных эффектов |
 | [effects](src/effects/README.md) | Фазовые стеки и независимые снимки |
+| [reactions](src/reactions/README.md) | Причинные цепочки и запрет повторной способности |
 | [targets](src/targets/README.md) | Селекторы и контекст |
 | [operations](src/operations/README.md) | Декларативные операции эффектов |
 | [death](src/death/README.md) | Граница смерти и стек DEATH |

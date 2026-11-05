@@ -111,9 +111,6 @@ export function createDeathQueue(runtime: OperationRuntime, getTurnOrder: () => 
       },
     },
     (context) => ({
-      createDamageEvent: () => {
-        throw new Error("Для CELL_DAMAGE нужна очередь независимых событий");
-      },
       placeEntity: createPlacementHandler(runtime, getTurnOrder, (...effects) =>
         context.emit(...effects),
       ),

@@ -20,6 +20,8 @@ export interface ExecutionHooks<
   Operation,
   Effect extends QueuedEffect<Operation> = QueuedEffect<Operation>,
 > {
+  copyEffect?(effect: Effect): Effect;
+  canExecuteEffect?(effect: Effect): boolean;
   isOwnerAlive(ownerId: string): boolean;
   canExecute(operation: Operation, context: EffectExecution<Operation, Effect>): boolean;
   execute(operation: Operation, context: EffectExecution<Operation, Effect>): void;
@@ -33,8 +35,11 @@ export class ExecutionQueue<
 > extends EntryQueue<Effect> {
   constructor(hooks: ExecutionHooks<Operation, Effect>) {
     super({
-      copy: (effect) => ({ ...effect, operations: [...effect.operations] }),
-      canExecute: (effect) => effect.source === "death" || hooks.isOwnerAlive(effect.ownerId),
+      copy: (effect) =>
+        hooks.copyEffect?.(effect) ?? { ...effect, operations: [...effect.operations] },
+      canExecute: (effect) =>
+        (effect.source === "death" || hooks.isOwnerAlive(effect.ownerId)) &&
+        hooks.canExecuteEffect?.(effect) !== false,
       execute: (effect, entryContext) => {
         const context: EffectExecution<Operation, Effect> = {
           effect,

@@ -2,6 +2,13 @@ import { commitUnitDeaths, isOwnerAlive } from "../death";
 import { EntryQueue } from "../execution";
 import { executeOperation, schedulePhase } from "../operations";
 import type { ExecutableEffect, OperationRuntime } from "../operations";
+import {
+  canEnterReaction,
+  createReactionHandler,
+  enterReaction,
+  inheritReactionCause,
+} from "../reactions";
+import type { ReactionCause } from "../reactions";
 import { createPlacementHandler } from "../summoning";
 import { getCell, getOccupant } from "../world";
 import type { Position } from "../world";
@@ -19,6 +26,7 @@ export interface CellDamageEvent {
   readonly id: string;
   readonly cell: Readonly<Position>;
   readonly amount: number;
+  readonly cause?: ReactionCause;
 }
 
 export interface DamageState {
@@ -41,7 +49,11 @@ export type DamageEntry = ExecutableEffect | CellDamageEvent;
 
 export interface DamageQueue extends EntryQueue<DamageEntry> {
   /** Резервирует ID и независимую стопку до постановки события после фаз атаки. */
-  createDamageEvent(cell: Readonly<Position>, amount: number): CellDamageEvent;
+  createDamageEvent(
+    cell: Readonly<Position>,
+    amount: number,
+    cause?: ReactionCause,
+  ): CellDamageEvent;
 }
 
 export function createDamageState(): DamageState {
@@ -67,17 +79,21 @@ export function createCellDamage(
   cell: Readonly<Position>,
   amount: number,
   modifiers?: DamageModifiers,
+  cause?: ReactionCause,
 ): CellDamageEvent {
   if (state.version !== 1 || !Number.isSafeInteger(state.nextEventId) || state.nextEventId < 1) {
     throw new RangeError("Исчерпан или повреждён счётчик событий урона");
   }
 
-  const event: CellDamageEvent = {
-    kind: "CELL_DAMAGE",
-    id: `damage:${state.nextEventId}`,
-    cell: { ...cell },
-    amount,
-  };
+  const event: CellDamageEvent = inheritReactionCause(
+    {
+      kind: "CELL_DAMAGE",
+      id: `damage:${state.nextEventId}`,
+      cell: { ...cell },
+      amount,
+    },
+    cause,
+  );
   validateEvent(event);
   if (modifiers) {
     registerDamageEvent(modifiers, event.id);
@@ -165,38 +181,54 @@ export function createDamageQueue(
       if (isDamage(entry)) {
         validateEvent(entry);
         registerDamageEvent(modifiers, entry.id);
-        return { kind: "CELL_DAMAGE", id: entry.id, cell: { ...entry.cell }, amount: entry.amount };
+        return inheritReactionCause(
+          {
+            kind: "CELL_DAMAGE" as const,
+            id: entry.id,
+            cell: { ...entry.cell },
+            amount: entry.amount,
+          },
+          entry.cause,
+        );
       }
 
-      return { ...entry, operations: [...entry.operations] };
+      return inheritReactionCause({ ...entry, operations: [...entry.operations] }, entry.cause);
     },
     canExecute: (entry) =>
-      isDamage(entry) || entry.source === "death" || isOwnerAlive(runtime.world, entry.ownerId),
+      isDamage(entry) ||
+      ((entry.source === "death" || isOwnerAlive(runtime.world, entry.ownerId)) &&
+        canEnterReaction(entry)),
     execute: (entry, context) => {
+      const cause = isDamage(entry) ? entry.cause : enterReaction(entry.cause, entry.definitionId)!;
+      const emit = (...entries: readonly DamageEntry[]): void => {
+        context.emit(...entries.map((next) => inheritReactionCause(next, cause)));
+      };
+
       if (isDamage(entry)) {
         const resolution = resolveCellDamage(runtime, entry, getTurnOrder(), modifiers);
-        context.emit(...resolution.effects);
+        emit(...resolution.effects);
         onDamage?.(resolution.outcome);
         return;
       }
 
       for (const operation of entry.operations) {
-        executeOperation(runtime, entry, operation, {
+        executeOperation(runtime, inheritReactionCause(entry, cause), operation, {
           createDamageEvent: (cell, amount) =>
-            context.emit(createCellDamage(state, cell, amount, modifiers)),
+            emit(createCellDamage(state, cell, amount, modifiers)),
           placeEntity: createPlacementHandler(runtime, getTurnOrder, (...effects) =>
-            context.emit(...effects),
+            emit(...effects),
           ),
+          triggerReaction: createReactionHandler(runtime, (...effects) => emit(...effects)),
           addDamageModifier: (eventId, modifier) => addDamageModifier(modifiers, eventId, modifier),
         });
       }
 
-      context.emit(...commitUnitDeaths(runtime, getTurnOrder()).effects);
+      emit(...commitUnitDeaths(runtime, getTurnOrder()).effects);
     },
   });
 
   return Object.assign(queue, {
-    createDamageEvent: (cell: Readonly<Position>, amount: number) =>
-      createCellDamage(state, cell, amount, modifiers),
+    createDamageEvent: (cell: Readonly<Position>, amount: number, cause?: ReactionCause) =>
+      createCellDamage(state, cell, amount, modifiers, cause),
   });
 }

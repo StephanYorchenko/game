@@ -2,6 +2,13 @@ import { ExecutionQueue } from "../execution";
 import type { EffectExecution, ExecutionHooks } from "../execution";
 import { addEffect, modifyEffectCounter, removeEffect, snapshotPhase } from "../effects";
 import type { EffectPhase, EffectStore, JsonObject, ScheduledEffect } from "../effects";
+import {
+  canEnterReaction,
+  createReactionHandler,
+  enterReaction,
+  inheritReactionCause,
+} from "../reactions";
+import type { ReactionCause, ReactionPhase } from "../reactions";
 import { heal, modifyHP, modifyStat } from "../stats";
 import type { Characteristic } from "../stats";
 import type { EntityTemplate, SummoningState } from "../summoning";
@@ -34,6 +41,7 @@ export type EngineOperation =
   | { kind: "heal"; target: TargetSelector; value: NumericExpression }
   | { kind: "create_damage_event"; target: { kind: "cell" }; amount: NumericExpression }
   | { kind: "place_entity"; target: { kind: "cell" }; template: EntityTemplate }
+  | { kind: "trigger_reaction"; target: TargetSelector; phase: ReactionPhase }
   | {
       kind: "add_damage_modifier";
       event: { kind: "context_damage" } | { kind: "event"; id: string };
@@ -45,6 +53,7 @@ export type EngineOperation =
 
 export interface ExecutableEffect extends ScheduledEffect<EngineOperation> {
   readonly context: PhaseContext;
+  readonly cause?: ReactionCause;
 }
 
 export interface OperationRuntime {
@@ -60,7 +69,8 @@ export interface OperationObserver {
 }
 
 export interface OperationEvents {
-  createDamageEvent(cell: Readonly<Position>, amount: number): void;
+  createDamageEvent?(cell: Readonly<Position>, amount: number): void;
+  triggerReaction?(ownerId: string, phase: ReactionPhase, context: PhaseContext): boolean;
   placeEntity?(cell: Readonly<Position>, template: EntityTemplate): boolean;
   addDamageModifier?(
     eventId: string,
@@ -167,6 +177,34 @@ function applyOperation(
   operation: EngineOperation,
   events?: OperationEvents,
 ): boolean {
+  if (operation.kind === "trigger_reaction") {
+    const targets = resolveTargets(runtime.world, effect.context, operation.target, {
+      livingUnitsOnly: true,
+    });
+
+    if (targets.kind !== "entities") {
+      return false;
+    }
+
+    if (!events?.triggerReaction) {
+      throw new Error("Для реакции нужна поддерживающая её очередь исполнения");
+    }
+
+    let scheduled = false;
+
+    for (const target of targets.entities) {
+      if (
+        (target.kind === "unit" && target.alive) ||
+        target.kind === "trap" ||
+        ((target.kind === "door" || target.kind === "window") && target.state !== "destroyed")
+      ) {
+        scheduled = events.triggerReaction(target.id, operation.phase, effect.context) || scheduled;
+      }
+    }
+
+    return scheduled;
+  }
+
   if (operation.kind === "place_entity") {
     const target = resolveTargets(runtime.world, effect.context, operation.target);
 
@@ -209,7 +247,7 @@ function applyOperation(
       return false;
     }
 
-    if (!events) {
+    if (!events?.createDamageEvent) {
       throw new Error("Для CELL_DAMAGE нужна очередь независимых событий");
     }
 
@@ -320,11 +358,30 @@ export function createOperationQueue(
   >,
   events?: (context: EffectExecution<EngineOperation, ExecutableEffect>) => OperationEvents,
 ): ExecutionQueue<EngineOperation, ExecutableEffect> {
+  const activeContext = (
+    context: EffectExecution<EngineOperation, ExecutableEffect>,
+  ): EffectExecution<EngineOperation, ExecutableEffect> => {
+    const cause = enterReaction(context.effect.cause, context.effect.definitionId)!;
+    return {
+      effect: inheritReactionCause(context.effect, cause),
+      emit: (...effects) =>
+        context.emit(...effects.map((effect) => inheritReactionCause(effect, cause))),
+    };
+  };
+
   return new ExecutionQueue<EngineOperation, ExecutableEffect>({
     ...boundaries,
+    copyEffect: (effect) =>
+      inheritReactionCause({ ...effect, operations: [...effect.operations] }, effect.cause),
+    canExecuteEffect: canEnterReaction,
     canExecute: () => true,
     execute: (operation, context) => {
-      executeOperation(runtime, context.effect, operation, events?.(context));
+      const active = activeContext(context);
+      executeOperation(runtime, active.effect, operation, {
+        ...events?.(active),
+        triggerReaction: createReactionHandler(runtime, (...effects) => active.emit(...effects)),
+      });
     },
+    afterEffect: (context) => boundaries.afterEffect?.(activeContext(context)),
   });
 }

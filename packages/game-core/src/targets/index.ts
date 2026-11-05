@@ -8,6 +8,7 @@ export type PhaseContext =
       readonly ownerId: string;
       readonly attackerId: string;
       readonly defenderId: string;
+      readonly damageEventId?: string;
       readonly cell: Readonly<Position>;
     }
   | {

@@ -173,14 +173,13 @@ export function loadContentPack(input: unknown): ContentPack {
   for (const group of ["units", "traps", "openings", "effects"] as const) {
     for (const [index, value] of array(root[group], `$.${group}`).entries()) {
       const path = `$.${group}[${index}]`;
-      const keys =
-        group === "units"
-          ? ["definitionId", "side", "stats", "attackMask", "keywords", "effectIds"]
-          : group === "openings"
-            ? ["definitionId", "kind", "interactionMask", "reinforcement", "effectIds"]
-            : group === "effects"
-              ? ["definitionId", "phase", "operations", "state"]
-              : ["definitionId", "effectIds"];
+      const keysByGroup = {
+        units: ["definitionId", "side", "stats", "attackMask", "keywords", "effectIds"],
+        openings: ["definitionId", "kind", "interactionMask", "reinforcement", "effectIds"],
+        effects: ["definitionId", "phase", "operations", "state"],
+        traps: ["definitionId", "effectIds"],
+      };
+      const keys = keysByGroup[group];
       const definition = object(value, path, keys);
       const id = text(definition.definitionId, `${path}.definitionId`);
 
@@ -308,7 +307,7 @@ export function compileContentPack(input: unknown): CompiledContentPack {
         }
       : { definitionId: id, kind: "trap", effects: trap!.effectIds.map(effect) };
   };
-  const compileOperation = (op: ContentOperation): EffectTemplate["operations"][number] => {
+  function compileOperation(op: ContentOperation): EffectTemplate["operations"][number] {
     if (op.kind === "add_effect") {
       return { kind: "add_effect", target: { ...op.target }, effect: effect(op.effectId) };
     }
@@ -318,7 +317,7 @@ export function compileContentPack(input: unknown): CompiledContentPack {
     }
 
     return copyContentJson(op) as unknown as typeof op;
-  };
+  }
 
   return {
     id: pack.id,

@@ -271,6 +271,7 @@ test("атака подключается к слоту хода и журнал
     createQueue: () => queue,
     chooseAction: ({ slot }) => ({ kind: slot === 1 ? "ATTACK" : "MOVE" }),
     executeAction: function* (action) {
+      yield* [];
       if (action.kind === "ATTACK") {
         resolveUnitAttack(runtime, queue, "actor", "target", rng, {
           onOutcome: (outcome) => journal.append("attack", outcome),

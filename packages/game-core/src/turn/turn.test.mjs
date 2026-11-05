@@ -163,6 +163,7 @@ test("смерть в TURN_START или ACTION_START отменяет выбор
         return { kind: "MOVE" };
       },
       executeAction: function* () {
+        yield* [];
         assert.fail("погибший не исполняет действие");
       },
     });
@@ -260,6 +261,7 @@ test("ACTION_END движения получает копию клетки ст�
     },
     chooseAction: ({ slot }) => ({ kind: slot === 1 ? "MOVE" : "ATTACK" }),
     executeAction: function* (_, { unit, slot }) {
+      yield* [];
       if (slot === 1) {
         unit.position.x = 1;
       }
@@ -279,6 +281,7 @@ test("отсутствующий или погибший участник не �
     createQueue: () => assert.fail("очередь не нужна"),
     chooseAction: () => assert.fail("выбор не нужен"),
     executeAction: function* () {
+      yield* [];
       assert.fail("действие не нужно");
     },
   };

@@ -9,6 +9,8 @@ import { createSeededRng } from "@deathwarriors/game-core/random";
 
 const full = () => Array.from({ length: 5 }, () => [1, 1, 1, 1, 1]);
 function fixture(side = "enemy") {
+  const opponent = side === "enemy" ? "defender" : "enemy";
+
   return loadWorld({
     version: 1,
     map: {
@@ -25,7 +27,7 @@ function fixture(side = "enemy") {
       kind: "unit",
       definitionId: "fighter",
       alive: true,
-      side: index === 0 ? side : side === "enemy" ? "defender" : "enemy",
+      side: index === 0 ? side : opponent,
       position: [
         { x: 2, y: 2 },
         { x: 3, y: 2 },

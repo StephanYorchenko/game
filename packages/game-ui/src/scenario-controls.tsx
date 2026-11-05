@@ -12,11 +12,18 @@ import { createDemoWorld } from "./demo";
 interface ScenarioControlsProps {
   onWorld: (world: WorldState, name: string) => void;
   onLoadStart: () => void;
-  state: { world: WorldState; requestVersion: number };
+  state: {
+    getWorld(): WorldState;
+    setWorld(world: WorldState): void;
+    nextRequest(): number;
+    isCurrentRequest(version: number): boolean;
+  };
 }
 
 function ScenarioControls({ onWorld, onLoadStart, state }: ScenarioControlsProps) {
-  const [initialWorld] = useState(() => state.world);
+  // Снимок на всё время жизни компонента: setter намеренно не нужен.
+  // eslint-disable-next-line react/hook-use-state
+  const [initialWorld] = useState(() => state.getWorld());
   const [error, setError] = useState("");
   const active = useRef(true);
 
@@ -26,13 +33,13 @@ function ScenarioControls({ onWorld, onLoadStart, state }: ScenarioControlsProps
 
     return () => {
       active.current = false;
-      state.requestVersion++;
+      state.nextRequest();
     };
   }, [initialWorld, onWorld, state]);
 
   function show(next: WorldState, name: string): void {
     onWorld(next, name);
-    state.world = next;
+    state.setWorld(next);
     setError("");
   }
 
@@ -44,19 +51,19 @@ function ScenarioControls({ onWorld, onLoadStart, state }: ScenarioControlsProps
     }
 
     event.currentTarget.value = "";
-    const version = ++state.requestVersion;
+    const version = state.nextRequest();
     onLoadStart();
 
     try {
       const json = await file.text();
 
-      if (!active.current || version !== state.requestVersion) {
+      if (!active.current || !state.isCurrentRequest(version)) {
         return;
       }
 
       show(parseWorld(json), file.name);
     } catch (error) {
-      if (!active.current || version !== state.requestVersion) {
+      if (!active.current || !state.isCurrentRequest(version)) {
         return;
       }
 
@@ -67,12 +74,12 @@ function ScenarioControls({ onWorld, onLoadStart, state }: ScenarioControlsProps
   }
 
   function reset(): void {
-    state.requestVersion++;
+    state.nextRequest();
     show(createDemoWorld(), "Дом у опушки");
   }
 
   function download(): void {
-    const blob = new Blob([serializeWorld(state.world)], { type: "application/json" });
+    const blob = new Blob([serializeWorld(state.getWorld())], { type: "application/json" });
     const url = URL.createObjectURL(blob);
     const link = document.createElement("a");
     link.href = url;
@@ -102,16 +109,25 @@ function ScenarioControls({ onWorld, onLoadStart, state }: ScenarioControlsProps
 export function createScenarioControls(
   container: HTMLElement,
   onWorld: ScenarioControlsProps["onWorld"],
-  onLoadStart: () => void = () => {},
+  onLoadStart: () => void = () => undefined,
 ): { setWorld(world: WorldState): void; destroy(): void } {
-  const state = { world: createDemoWorld(), requestVersion: 0 };
+  let world = createDemoWorld();
+  let requestVersion = 0;
+  const state: ScenarioControlsProps["state"] = {
+    getWorld: () => world,
+    setWorld(next) {
+      world = next;
+    },
+    nextRequest: () => ++requestVersion,
+    isCurrentRequest: (version) => version === requestVersion,
+  };
   const root = createRoot(container);
   root.render(<ScenarioControls onWorld={onWorld} onLoadStart={onLoadStart} state={state} />);
 
   return {
     setWorld(world) {
-      state.requestVersion++;
-      state.world = world;
+      state.nextRequest();
+      state.setWorld(world);
     },
     destroy() {
       root.unmount();

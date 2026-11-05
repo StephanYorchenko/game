@@ -50,11 +50,15 @@ export function runUnitTurn<Action extends TurnAction>(
 ): TurnResult {
   const unit = runtime.world.units.find((candidate) => candidate.id === ownerId);
   const actions: { slot: 1 | 2; kind: ActionKind }[] = [];
-  const result = (): TurnResult => ({
-    ownerId,
-    status: !unit ? "missing" : unit.alive ? "completed" : "dead",
-    actions,
-  });
+  const result = (): TurnResult => {
+    let status: TurnResult["status"] = "missing";
+
+    if (unit) {
+      status = unit.alive ? "completed" : "dead";
+    }
+
+    return { ownerId, status, actions };
+  };
 
   if (!unit || !unit.alive) {
     return result();

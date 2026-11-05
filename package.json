@@ -9,10 +9,13 @@
     "build": "pnpm -r run build",
     "typecheck": "pnpm -r run typecheck",
     "test": "pnpm -r run test",
-    "check": "pnpm -r run check",
+    "check": "pnpm lint && pnpm test:lint && pnpm -r run check",
     "dev:ui": "pnpm --filter @deathwarriors/game-core build && pnpm --filter @deathwarriors/game-ui dev",
     "test:ui": "pnpm --filter @deathwarriors/game-core build && pnpm --filter @deathwarriors/game-ui build && pnpm --filter @deathwarriors/game-ui test",
-    "example:simulation": "pnpm --filter @deathwarriors/game-core build && pnpm --filter @deathwarriors/game-core example:simulation"
+    "example:simulation": "pnpm --filter @deathwarriors/game-core build && pnpm --filter @deathwarriors/game-core example:simulation",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
+    "test:lint": "node --test tooling/eslint/config.test.mjs"
   },
   "devDependencies": {
     "@emotion/eslint-plugin": "11.12.0",

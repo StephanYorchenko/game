@@ -1,0 +1,19 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "paths": {
+      "@deathwarriors/game-core": [
+        "../../packages/game-core/src/index.ts"
+      ],
+      "@deathwarriors/game-core/*": [
+        "../../packages/game-core/src/*/index.ts"
+      ],
+      "@deathwarriors/*": [
+        "../../packages/*/src/index.ts"
+      ],
+      "/src/*": [
+        "../../packages/game-ui/src/*"
+      ]
+    }
+  }
+}

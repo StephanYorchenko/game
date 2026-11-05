@@ -37,6 +37,10 @@
       "types": "./dist/defender-targeting/index.d.ts",
       "import": "./dist/defender-targeting/index.js"
     },
+    "./reactions": {
+      "types": "./dist/reactions/index.d.ts",
+      "import": "./dist/reactions/index.js"
+    },
     "./turn": {
       "types": "./dist/turn/index.d.ts",
       "import": "./dist/turn/index.js"

@@ -1,6 +1,7 @@
 import { createDamageQueue } from "../damage";
 import type { DamageEntry, DamageQueue, DamageState } from "../damage";
 import type { OperationRuntime } from "../operations";
+import { canEnterReaction } from "../reactions";
 import { runUnitTurn } from "../turn";
 import type { TurnAction, TurnHandlers, TurnResult } from "../turn";
 import type { EventJournal } from "./index";
@@ -47,6 +48,7 @@ export function createJournalRuntime(
           ownerId: effect.ownerId,
           phase: effect.phase,
           context: effect.context,
+          ...(effect.cause ? { cause: effect.cause } : {}),
           operation,
           applied,
           reason: applied ? null : "operation_unavailable",
@@ -71,6 +73,7 @@ function describe(entry: DamageEntry) {
     phase: entry.phase,
     source: entry.source,
     context: entry.context,
+    ...(entry.cause ? { cause: entry.cause } : {}),
   };
 }
 
@@ -97,7 +100,11 @@ export function createJournalDamageQueue(
       journal.append("entry_end", { entry: describe(entry), deaths });
     },
     skipped: (entry) => {
-      journal.append("skipped", { entry: describe(entry), reason: "owner_unavailable" });
+      journal.append("skipped", {
+        entry: describe(entry),
+        reason:
+          !("kind" in entry) && !canEnterReaction(entry) ? "reaction_cycle" : "owner_unavailable",
+      });
     },
   });
 }

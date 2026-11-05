@@ -51,6 +51,12 @@ export interface OperationRuntime {
   readonly world: WorldState;
   readonly effects: EffectStore<EngineOperation>;
   readonly summoning?: SummoningState;
+  readonly observer?: OperationObserver;
+}
+
+export interface OperationObserver {
+  before?(effect: ExecutableEffect, operation: EngineOperation): void;
+  after?(effect: ExecutableEffect, operation: EngineOperation, applied: boolean): void;
 }
 
 export interface OperationEvents {
@@ -144,6 +150,18 @@ export function evaluateNumeric(
 
 /** Возвращает false для неосуществимой операции, не отменяя другие операции эффекта. */
 export function executeOperation(
+  runtime: OperationRuntime,
+  effect: ExecutableEffect,
+  operation: EngineOperation,
+  events?: OperationEvents,
+): boolean {
+  runtime.observer?.before?.(effect, operation);
+  const applied = applyOperation(runtime, effect, operation, events);
+  runtime.observer?.after?.(effect, operation, applied);
+  return applied;
+}
+
+function applyOperation(
   runtime: OperationRuntime,
   effect: ExecutableEffect,
   operation: EngineOperation,

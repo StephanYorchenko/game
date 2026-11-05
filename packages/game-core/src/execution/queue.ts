@@ -9,16 +9,33 @@ export interface EntryHooks<Entry> {
   execute(entry: Entry, context: EntryExecution<Entry>): void;
 }
 
+/** Наблюдатели не должны изменять симуляцию или дополнять очередь. */
+export interface EntryObserver<Entry> {
+  before?(entry: Entry): void;
+  after?(entry: Entry): void;
+  skipped?(entry: Entry): void;
+}
+
 /** Общий планировщик атомарных эффектов и независимых событий. */
 export class EntryQueue<Entry> {
   private pending: Entry[] = [];
   private running = false;
   private failed = false;
+  private observers: EntryObserver<Entry>[] = [];
 
   constructor(private readonly hooks: EntryHooks<Entry>) {}
 
   get size(): number {
     return this.pending.length;
+  }
+
+  observe(observer: EntryObserver<Entry>): this {
+    if (this.running || this.failed) {
+      throw new Error("Нельзя подключать наблюдателя во время исполнения или после ошибки");
+    }
+
+    this.observers.push(observer);
+    return this;
   }
 
   enqueue(...entries: readonly Entry[]): void {
@@ -41,7 +58,15 @@ export class EntryQueue<Entry> {
         const entry = this.pending.shift()!;
 
         if (!this.hooks.canExecute(entry)) {
+          for (const observer of this.observers) {
+            observer.skipped?.(entry);
+          }
+
           continue;
+        }
+
+        for (const observer of this.observers) {
+          observer.before?.(entry);
         }
 
         const consequences: Entry[] = [];
@@ -64,6 +89,10 @@ export class EntryQueue<Entry> {
         }
 
         this.pending = [...consequences, ...this.pending];
+
+        for (const observer of this.observers) {
+          observer.after?.(entry);
+        }
       }
     } catch (error) {
       this.failed = true;

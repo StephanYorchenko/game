@@ -4,7 +4,7 @@
 
 ## Начало работы
 
-Нужны Node.js 24 или новее и pnpm 11.25.0 — версия закреплена в `package.json`. При необходимости установить pnpm: `npm install --global pnpm@11.25.0`. Из корня репозитория:
+Нужны Node.js 24 или новее и pnpm 12.16.1 — версия закреплена в `package.json`. При необходимости установить pnpm: `npm install --global pnpm@12.16.1`. Из корня репозитория:
 
 ```sh
 pnpm install --frozen-lockfile

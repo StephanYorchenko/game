@@ -1,7 +1,7 @@
 {
   "name": "deathwarriors",
   "private": true,
-  "packageManager": "pnpm@11.25.0",
+  "packageManager": "pnpm@12.16.1",
   "engines": {
     "node": ">=24"
   },
@@ -13,5 +13,20 @@
     "dev:ui": "pnpm --filter @deathwarriors/game-core build && pnpm --filter @deathwarriors/game-ui dev",
     "test:ui": "pnpm --filter @deathwarriors/game-core build && pnpm --filter @deathwarriors/game-ui build && pnpm --filter @deathwarriors/game-ui test",
     "example:simulation": "pnpm --filter @deathwarriors/game-core build && pnpm --filter @deathwarriors/game-core example:simulation"
+  },
+  "devDependencies": {
+    "@emotion/eslint-plugin": "11.12.0",
+    "@eslint/compat": "2.1.1",
+    "@eslint/js": "10.0.1",
+    "@typescript/native": "npm:typescript@7.0.2",
+    "eslint": "10.14.0",
+    "eslint-import-resolver-typescript": "4.4.5",
+    "eslint-plugin-import": "2.32.0",
+    "eslint-plugin-promise": "7.3.0",
+    "eslint-plugin-react": "7.37.5",
+    "eslint-plugin-react-hooks": "7.1.1",
+    "globals": "17.14.0",
+    "typescript": "npm:@typescript/typescript6@6.0.2",
+    "typescript-eslint": "8.72.1"
   }
 }

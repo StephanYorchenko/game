@@ -1,0 +1,223 @@
+{
+  "world": {
+    "version": 1,
+    "map": {
+      "width": 7,
+      "height": 1,
+      "cells": [
+        {
+          "surface": "floor",
+          "area": "inside",
+          "structure": null
+        },
+        {
+          "surface": "floor",
+          "area": "inside",
+          "structure": null
+        },
+        {
+          "surface": "floor",
+          "area": "inside",
+          "structure": {
+            "id": "front",
+            "kind": "door",
+            "state": "closed",
+            "reinforcement": null,
+            "interactionMask": [
+              [
+                0,
+                0,
+                0,
+                0,
+                0
+              ],
+              [
+                0,
+                0,
+                1,
+                0,
+                0
+              ],
+              [
+                0,
+                1,
+                0,
+                1,
+                0
+              ],
+              [
+                0,
+                0,
+                1,
+                0,
+                0
+              ],
+              [
+                0,
+                0,
+                0,
+                0,
+                0
+              ]
+            ]
+          }
+        },
+        {
+          "surface": "floor",
+          "area": "inside",
+          "structure": null
+        },
+        {
+          "surface": "floor",
+          "area": "inside",
+          "structure": null
+        },
+        {
+          "surface": "floor",
+          "area": "inside",
+          "structure": null
+        },
+        {
+          "surface": "floor",
+          "area": "inside",
+          "structure": null
+        }
+      ]
+    },
+    "units": [
+      {
+        "id": "guard",
+        "kind": "unit",
+        "definitionId": "archer",
+        "side": "defender",
+        "alive": true,
+        "position": {
+          "x": 0,
+          "y": 0
+        },
+        "stats": {
+          "hp": 10,
+          "maxHP": 10,
+          "strength": 10,
+          "agility": 10,
+          "damage": 3,
+          "movement": 2,
+          "resistance": 0
+        },
+        "attackMask": [
+          [
+            0,
+            0,
+            1,
+            0,
+            0
+          ],
+          [
+            0,
+            0,
+            1,
+            0,
+            0
+          ],
+          [
+            1,
+            1,
+            0,
+            1,
+            1
+          ],
+          [
+            0,
+            0,
+            1,
+            0,
+            0
+          ],
+          [
+            0,
+            0,
+            1,
+            0,
+            0
+          ]
+        ],
+        "keywords": []
+      },
+      {
+        "id": "wolf",
+        "kind": "unit",
+        "definitionId": "wolf",
+        "side": "enemy",
+        "alive": true,
+        "position": {
+          "x": 6,
+          "y": 0
+        },
+        "stats": {
+          "hp": 10,
+          "maxHP": 10,
+          "strength": 2,
+          "agility": 1,
+          "damage": 1,
+          "movement": 2,
+          "resistance": 0
+        },
+        "attackMask": [
+          [
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          [
+            0,
+            0,
+            1,
+            0,
+            0
+          ],
+          [
+            0,
+            1,
+            0,
+            1,
+            0
+          ],
+          [
+            0,
+            0,
+            1,
+            0,
+            0
+          ],
+          [
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        ],
+        "keywords": []
+      }
+    ],
+    "traps": [
+      {
+        "id": "snare",
+        "kind": "trap",
+        "definitionId": "snare",
+        "position": {
+          "x": 4,
+          "y": 0
+        }
+      }
+    ]
+  },
+  "openings": [
+    {
+      "id": "front",
+      "definitionId": "door"
+    }
+  ]
+}

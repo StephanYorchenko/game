@@ -11,4 +11,9 @@ test("production-сборка загружает API core и отображае�
   await expect(page.locator(".tile .token")).toHaveCount(5);
   expect(errors).toEqual([]);
   await page.screenshot({ path: test.info().outputPath("map-desktop.png"), fullPage: true });
+  await page.getByRole("button", { name: "Демо ночи", exact: true }).click();
+  await page.getByRole("button", { name: "Шаг", exact: true }).click();
+  await expect(page.getByTestId("night-turns")).toHaveText("1");
+  await expect(page.getByTestId("event-count")).not.toHaveText("0");
+  expect(errors).toEqual([]);
 });

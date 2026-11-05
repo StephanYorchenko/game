@@ -1,0 +1,613 @@
+{
+  "seed": 33,
+  "content": {
+    "version": 1,
+    "id": "minimal-v1",
+    "units": [
+      {
+        "definitionId": "warrior",
+        "side": "defender",
+        "stats": {
+          "hp": 10,
+          "maxHP": 10,
+          "strength": 2,
+          "agility": 1,
+          "damage": 2,
+          "movement": 2,
+          "resistance": 0
+        },
+        "attackMask": [
+          [
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          [
+            0,
+            0,
+            1,
+            0,
+            0
+          ],
+          [
+            0,
+            1,
+            0,
+            1,
+            0
+          ],
+          [
+            0,
+            0,
+            1,
+            0,
+            0
+          ],
+          [
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        ],
+        "keywords": [],
+        "effectIds": []
+      },
+      {
+        "definitionId": "archer",
+        "side": "defender",
+        "stats": {
+          "hp": 10,
+          "maxHP": 10,
+          "strength": 2,
+          "agility": 1,
+          "damage": 2,
+          "movement": 2,
+          "resistance": 0
+        },
+        "attackMask": [
+          [
+            0,
+            0,
+            1,
+            0,
+            0
+          ],
+          [
+            0,
+            0,
+            1,
+            0,
+            0
+          ],
+          [
+            1,
+            1,
+            0,
+            1,
+            1
+          ],
+          [
+            0,
+            0,
+            1,
+            0,
+            0
+          ],
+          [
+            0,
+            0,
+            1,
+            0,
+            0
+          ]
+        ],
+        "keywords": [],
+        "effectIds": [
+          "haste"
+        ]
+      },
+      {
+        "definitionId": "wolf",
+        "side": "enemy",
+        "stats": {
+          "hp": 10,
+          "maxHP": 10,
+          "strength": 2,
+          "agility": 1,
+          "damage": 2,
+          "movement": 2,
+          "resistance": 0
+        },
+        "attackMask": [
+          [
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          [
+            0,
+            0,
+            1,
+            0,
+            0
+          ],
+          [
+            0,
+            1,
+            0,
+            1,
+            0
+          ],
+          [
+            0,
+            0,
+            1,
+            0,
+            0
+          ],
+          [
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        ],
+        "keywords": [],
+        "effectIds": []
+      }
+    ],
+    "traps": [
+      {
+        "definitionId": "snare",
+        "effectIds": [
+          "snare-death"
+        ]
+      }
+    ],
+    "openings": [
+      {
+        "definitionId": "door",
+        "kind": "door",
+        "interactionMask": [
+          [
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          [
+            0,
+            0,
+            1,
+            0,
+            0
+          ],
+          [
+            0,
+            1,
+            0,
+            1,
+            0
+          ],
+          [
+            0,
+            0,
+            1,
+            0,
+            0
+          ],
+          [
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        ],
+        "reinforcement": null,
+        "effectIds": []
+      },
+      {
+        "definitionId": "window",
+        "kind": "window",
+        "interactionMask": [
+          [
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          [
+            0,
+            0,
+            1,
+            0,
+            0
+          ],
+          [
+            0,
+            1,
+            0,
+            1,
+            0
+          ],
+          [
+            0,
+            0,
+            1,
+            0,
+            0
+          ],
+          [
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        ],
+        "reinforcement": null,
+        "effectIds": []
+      },
+      {
+        "definitionId": "fortified-door",
+        "kind": "door",
+        "interactionMask": [
+          [
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          [
+            0,
+            0,
+            1,
+            0,
+            0
+          ],
+          [
+            0,
+            1,
+            0,
+            1,
+            0
+          ],
+          [
+            0,
+            0,
+            1,
+            0,
+            0
+          ],
+          [
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        ],
+        "reinforcement": {
+          "hp": 8,
+          "maxHP": 8,
+          "resistance": 1
+        },
+        "effectIds": []
+      }
+    ],
+    "effects": [
+      {
+        "definitionId": "bleeding",
+        "phase": "TURN_START",
+        "state": {},
+        "operations": [
+          {
+            "kind": "modify_hp",
+            "target": {
+              "kind": "owner"
+            },
+            "delta": -1
+          }
+        ]
+      },
+      {
+        "definitionId": "snare-death",
+        "phase": "DEATH",
+        "state": {},
+        "operations": [
+          {
+            "kind": "create_damage_event",
+            "target": {
+              "kind": "cell"
+            },
+            "amount": 2
+          },
+          {
+            "kind": "add_effect",
+            "target": {
+              "kind": "occupant"
+            },
+            "effectId": "bleeding"
+          }
+        ]
+      },
+      {
+        "definitionId": "haste",
+        "phase": "ACTION_START",
+        "state": {},
+        "operations": [
+          {
+            "kind": "modify_stat",
+            "target": {
+              "kind": "owner"
+            },
+            "stat": "movement",
+            "delta": 1
+          },
+          {
+            "kind": "add_effect",
+            "target": {
+              "kind": "owner"
+            },
+            "effectId": "haste-revert"
+          }
+        ]
+      },
+      {
+        "definitionId": "haste-revert",
+        "phase": "ACTION_END",
+        "state": {},
+        "operations": [
+          {
+            "kind": "modify_stat",
+            "target": {
+              "kind": "owner"
+            },
+            "stat": "movement",
+            "delta": -1
+          },
+          {
+            "kind": "remove_effect",
+            "instance": {
+              "kind": "self"
+            }
+          }
+        ]
+      }
+    ]
+  },
+  "scenario": {
+    "world": {
+      "version": 1,
+      "map": {
+        "width": 7,
+        "height": 1,
+        "cells": [
+          {
+            "surface": "floor",
+            "area": "inside",
+            "structure": null
+          },
+          {
+            "surface": "floor",
+            "area": "inside",
+            "structure": null
+          },
+          {
+            "surface": "floor",
+            "area": "inside",
+            "structure": {
+              "id": "front",
+              "kind": "door",
+              "state": "closed",
+              "reinforcement": null,
+              "interactionMask": [
+                [
+                  0,
+                  0,
+                  0,
+                  0,
+                  0
+                ],
+                [
+                  0,
+                  0,
+                  1,
+                  0,
+                  0
+                ],
+                [
+                  0,
+                  1,
+                  0,
+                  1,
+                  0
+                ],
+                [
+                  0,
+                  0,
+                  1,
+                  0,
+                  0
+                ],
+                [
+                  0,
+                  0,
+                  0,
+                  0,
+                  0
+                ]
+              ]
+            }
+          },
+          {
+            "surface": "floor",
+            "area": "inside",
+            "structure": null
+          },
+          {
+            "surface": "floor",
+            "area": "inside",
+            "structure": null
+          },
+          {
+            "surface": "floor",
+            "area": "inside",
+            "structure": null
+          },
+          {
+            "surface": "floor",
+            "area": "inside",
+            "structure": null
+          }
+        ]
+      },
+      "units": [
+        {
+          "id": "guard",
+          "kind": "unit",
+          "definitionId": "archer",
+          "side": "defender",
+          "alive": true,
+          "position": {
+            "x": 0,
+            "y": 0
+          },
+          "stats": {
+            "hp": 10,
+            "maxHP": 10,
+            "strength": 10,
+            "agility": 10,
+            "damage": 3,
+            "movement": 2,
+            "resistance": 0
+          },
+          "attackMask": [
+            [
+              0,
+              0,
+              1,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              1,
+              0,
+              0
+            ],
+            [
+              1,
+              1,
+              0,
+              1,
+              1
+            ],
+            [
+              0,
+              0,
+              1,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              1,
+              0,
+              0
+            ]
+          ],
+          "keywords": []
+        },
+        {
+          "id": "wolf",
+          "kind": "unit",
+          "definitionId": "wolf",
+          "side": "enemy",
+          "alive": true,
+          "position": {
+            "x": 6,
+            "y": 0
+          },
+          "stats": {
+            "hp": 10,
+            "maxHP": 10,
+            "strength": 2,
+            "agility": 1,
+            "damage": 1,
+            "movement": 2,
+            "resistance": 0
+          },
+          "attackMask": [
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              1,
+              0,
+              0
+            ],
+            [
+              0,
+              1,
+              0,
+              1,
+              0
+            ],
+            [
+              0,
+              0,
+              1,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          ],
+          "keywords": []
+        }
+      ],
+      "traps": [
+        {
+          "id": "snare",
+          "kind": "trap",
+          "definitionId": "snare",
+          "position": {
+            "x": 4,
+            "y": 0
+          }
+        }
+      ]
+    },
+    "openings": [
+      {
+        "id": "front",
+        "definitionId": "door"
+      }
+    ]
+  }
+}

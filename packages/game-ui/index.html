@@ -11,7 +11,7 @@
       <header class="masthead">
         <div><p class="eyebrow">DEATHWARRIORS / ТАКТИЧЕСКАЯ КАРТА</p>
           <h1>Держать периметр</h1></div>
-        <span class="badge">Просмотр сценария</span>
+        <span class="badge">Диагностика сценария</span>
       </header>
       <main class="layout">
         <section class="map-panel" aria-label="Состояние карты">
@@ -21,6 +21,11 @@
           </div>
           <p id="summary" class="summary" role="status"></p>
           <div id="scenario-controls"></div>
+          <section class="night-panel" aria-labelledby="night-heading">
+            <p class="eyebrow">СИМУЛЯЦИЯ CORE</p>
+            <h2 id="night-heading">Одна ночь</h2>
+            <div id="night-controls"></div>
+          </section>
           <div id="map-viewport" class="map-viewport" tabindex="0"
             role="region" aria-label="Карта с прокруткой">
             <div id="map"></div>
@@ -52,7 +57,8 @@
           </ul>
           <p class="legend-note">Сплошная рамка клетки — внутри здания.<br />Пунктирная — снаружи.</p>
           <div class="notice"><strong>Снимок состояния</strong>
-            <p>JSON читается локально и проверяется ядром. Управление ночью появится позже.</p>
+            <p>JSON читается локально и проверяется ядром. Карта и журнал показывают
+              полное состояние для диагностики, включая скрытые данные.</p>
           </div>
         </aside>
         </div>

@@ -1,6 +1,8 @@
 import { createMapView } from "./map-view";
 import { destroyCellInspector, renderCellInspector } from "./cell-inspector";
 import { createScenarioControls } from "./scenario-controls";
+import { createNightControls } from "./night-controls";
+import type { WorldState } from "@deathwarriors/game-core";
 import "./style.css";
 import { destroyOverlayControls, renderOverlayControls } from "./overlay-controls";
 
@@ -16,8 +18,9 @@ const summary = document.getElementById("summary");
 const inspector = document.getElementById("cell-inspector");
 const controls = document.getElementById("scenario-controls");
 const name = document.getElementById("scenario-name");
+const night = document.getElementById("night-controls");
 
-if (!root || !size || !summary || !inspector || !controls || !name) {
+if (!root || !size || !summary || !inspector || !controls || !name || !night) {
   throw new Error("Не найден контейнер карты");
 }
 
@@ -27,7 +30,7 @@ const view = createMapView(root, {
     renderOverlayControls(overlays, state, (mode) => view.setOverlay(mode));
   },
 });
-const scenarioControls = createScenarioControls(controls, (world, scenarioName) => {
+const showWorld = (world: WorldState, scenarioName: string): void => {
   view.render(world);
   name.textContent = scenarioName;
   size.textContent = `${world.map.width} × ${world.map.height}`;
@@ -38,10 +41,24 @@ const scenarioControls = createScenarioControls(controls, (world, scenarioName) 
     `Противники: ${enemies}`,
     `Ловушки: ${world.traps.length}`,
   ].join(" · ");
+};
+
+const nightControls = createNightControls(night, (world, scenarioName) => {
+  scenarioControls.setWorld(world);
+  showWorld(world, scenarioName);
 });
+const scenarioControls = createScenarioControls(
+  controls,
+  (world, scenarioName) => {
+    nightControls.clear();
+    showWorld(world, scenarioName);
+  },
+  () => nightControls.pause(),
+);
 
 import.meta.hot?.dispose(() => {
   scenarioControls.destroy();
+  nightControls.destroy();
   view.destroy();
   destroyCellInspector(inspector);
   destroyOverlayControls(overlays);

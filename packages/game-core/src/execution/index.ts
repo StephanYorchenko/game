@@ -1,6 +1,6 @@
 import { EntryQueue } from "./queue";
 export { EntryQueue } from "./queue";
-export type { EntryExecution, EntryHooks } from "./queue";
+export type { EntryExecution, EntryHooks, EntryObserver } from "./queue";
 
 export interface QueuedEffect<Operation> {
   readonly ownerId: string;

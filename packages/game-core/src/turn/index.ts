@@ -21,6 +21,10 @@ export interface ActionContext {
 }
 
 export interface TurnHandlers<Action extends TurnAction> {
+  onPhase?(
+    phase: "TURN_START" | "ACTION_START" | "ACTION_END" | "TURN_END",
+    slot: 1 | 2 | null,
+  ): void;
   chooseAction(context: ActionContext): Action;
   /** Каждый пакет разрешается полностью до запроса следующего пакета итератора. */
   executeAction(action: Action, context: ActionContext): Iterable<readonly ExecutableEffect[]>;
@@ -55,10 +59,12 @@ export function runUnitTurn<Action extends TurnAction>(
 
   const queue = handlers.createQueue?.() ?? createDeathQueue(runtime, getTurnOrder);
   const ordinary: PhaseContext = { kind: "phase", ownerId };
+  let currentSlot: 1 | 2 | null = null;
   const resolvePhase = (
     phase: "TURN_START" | "ACTION_START" | "ACTION_END" | "TURN_END",
     context: PhaseContext = ordinary,
   ): void => {
+    handlers.onPhase?.(phase, currentSlot);
     queue.enqueue(...schedulePhase(runtime.effects, ownerId, phase, context));
     queue.drain();
   };
@@ -70,6 +76,7 @@ export function runUnitTurn<Action extends TurnAction>(
       return result();
     }
 
+    currentSlot = slot;
     resolvePhase("ACTION_START");
 
     if (!unit.alive) {
@@ -102,6 +109,7 @@ export function runUnitTurn<Action extends TurnAction>(
   }
 
   if (unit.alive) {
+    currentSlot = null;
     resolvePhase("TURN_END");
   }
 

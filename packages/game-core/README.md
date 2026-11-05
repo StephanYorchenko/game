@@ -17,6 +17,7 @@
 | [operations](src/operations/README.md) | Декларативные операции эффектов |
 | [death](src/death/README.md) | Граница смерти и стек DEATH |
 | [damage](src/damage/README.md) | Независимые события урона по клетке |
+| [combat](src/combat/README.md) | Броски обычной атаки и фазы исхода перед уроном |
 | [openings](src/openings/README.md) | Открытие дверей/окон и допустимость атаки укреплений |
 | [turn](src/turn/README.md) | Фазы хода и последовательные слоты действий |
 | [journal](src/journal/README.md) | Журнал операций, решений RNG и повтор исходного запуска |

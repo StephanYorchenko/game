@@ -225,8 +225,8 @@ test("поражение в конце 13-го раунда проверяетс
   runNight(data.runtime, state, data.damage, rng);
   assert.equal(state.status, "defeat");
   assert.equal(state.completedRounds, 13);
-  assert.equal(enemy(data).alive, true);
-  assert.deepEqual(state.departedEnemyIds, []);
+  assert.equal(enemy(data), undefined);
+  assert.deepEqual(state.departedEnemyIds, ["enemy"]);
   assert.equal(
     data.runtime.effects.instances.find((effect) => effect.ownerId === "enemy").state.turns,
     13,

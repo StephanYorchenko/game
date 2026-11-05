@@ -111,7 +111,7 @@ function finishNight(
 ): void {
   clearTrapKnowledge(runtime.world);
 
-  if (status === "completed") {
+  if (state.completedRounds === NIGHT_ROUNDS) {
     const enemies = runtime.world.units.filter((unit) => unit.side === "enemy" && unit.alive);
     const ids = new Set(enemies.map((unit) => unit.id));
     state.departedEnemyIds = state.order.filter((id) => ids.has(id));
